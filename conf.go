@@ -17,7 +17,7 @@ type KeyBinding struct {
 	// A repeated value of key modifiers.
 	// Valid values include:
 	//   SHIFT, ALT, CTRL, WIN (SUPER/META).
-	Modifier []string `yaml: "modifier"`
+	Modifier []string `yaml:"modifier"`
 	// When this is set, this overrides Modifier
 	ModifierCode []int32
 	// Calculated bitwise OR result of modifiers
@@ -25,10 +25,10 @@ type KeyBinding struct {
 	// Valid values are:
 	//   A - Z, 0 - 9, UP_ARROW, =, -
 	// Anything not covered here could be set directly via KeyCode
-	Key string `yaml: "key"`
+	Key string `yaml:"key"`
 	// Automatically converted from Key.
 	// When this is set, it overrides Key.
-	KeyCode int32 `yaml: "key_code"`
+	KeyCode int32 `yaml:"key_code"`
 	// The feature in RectangleWin to bind to.
 	// Valid values:
 	//   moveToTop
@@ -42,12 +42,15 @@ type KeyBinding struct {
 	//   makeSmaller
 	//   makeLarger
 	//   makeFullHeight
+	//   moveToCenter
+	//   toggleAlwaysOnTop
+	//   almostMaximize
 	//
-	BindFeature string `yaml: "bindfeature"`
+	BindFeature string `yaml:"bindfeature"`
 }
 
 type Configuration struct {
-	Keybindings []KeyBinding `yaml: "key_binding"`
+	Keybindings []KeyBinding `yaml:"keybindings"`
 }
 
 // This mini config is returned if we can't load a valid file

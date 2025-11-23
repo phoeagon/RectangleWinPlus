@@ -53,6 +53,15 @@ func onReady() {
 		}
 	}()
 
+	mApacheLicense := systray.AddMenuItem("Apache LICENSE", "")
+	go func() {
+		for range mApacheLicense.ClickedCh {
+			if err := w32.ShellExecute(0, "open", "http://www.apache.org/licenses/LICENSE-2.0", "", "", w32.SW_SHOWNORMAL); err != nil {
+				fmt.Printf("failed to launch browser: (%d), %v\n", w32.GetLastError(), err)
+			}
+		}
+	}()
+
 	updates := systray.AddMenuItem("Check updates", "")
 	go func() {
 		for range updates.ClickedCh {
