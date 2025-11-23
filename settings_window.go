@@ -14,6 +14,7 @@ type SettingsWindowApp struct {
 	*walk.MainWindow
 	rows      []*HotkeyRow
 	recording *HotkeyRow
+	handlerID int
 }
 
 type HotkeyRow struct {
@@ -153,12 +154,16 @@ func buildSettingsRows(sw *SettingsWindowApp) []Widget {
 
 func startRecordingHotkey(sw *SettingsWindowApp, row *HotkeyRow) {
 	if sw.recording != nil {
+		if sw.handlerID != 0 {
+			sw.recording.Button.KeyDown().Detach(sw.handlerID)
+			sw.handlerID = 0
+		}
 		sw.recording.UpdateText() // Reset previous
 	}
 	sw.recording = row
 	row.Button.SetText("Press keys...")
 
-	sw.KeyDown().Attach(func(key walk.Key) {
+	sw.handlerID = row.Button.KeyDown().Attach(func(key walk.Key) {
 		if sw.recording == nil {
 			return
 		}
@@ -200,6 +205,12 @@ func startRecordingHotkey(sw *SettingsWindowApp, row *HotkeyRow) {
 		sw.recording.Binding.CombinedMod = bitwiseOr(modCodes)
 
 		sw.recording.UpdateText()
+
+		// Detach and cleanup
+		if sw.handlerID != 0 {
+			sw.recording.Button.KeyDown().Detach(sw.handlerID)
+			sw.handlerID = 0
+		}
 		sw.recording = nil
 	})
 }
