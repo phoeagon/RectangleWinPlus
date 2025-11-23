@@ -44,20 +44,6 @@ jobs:
       - name: go generate (Binary Version Information and Icon)
         run: go generate
 
-      # --- Install MinGW-w64 for windres cross-compilation ---
-      - name: Install mingw-w64
-        run: |
-          sudo apt-get install -y mingw-w64
-
-      # --- Generate fresh .syso files for Windows cross builds ---
-      - name: Generate Windows resources
-        run: |
-          # Windows 64-bit
-          x86_64-w64-mingw32-windres app.rc -O coff -o rsrc_windows_amd64.syso
-
-          # Windows 32-bit
-          i686-w64-mingw32-windres app.rc -O coff -o rsrc_windows_386.syso
-
       # --- Build-only (snapshot) with GoReleaser ---
       - name: Build-only (GoReleaser)
         if: "!startsWith(github.ref, 'refs/tags/')"
@@ -66,10 +52,9 @@ jobs:
           distribution: goreleaser
           version: v2.12.0
           # due to syso file,skipping validation
-          args: release --snapshot --clean
+          args: release --snapshot
         env:
           GORELEASER_SKIP_PUBLISH: true
-          GORELEASER_SKIP_CHECK_DIRTY: true
 
       # --- Publish release (GoReleaser) ---
       - name: Publish release (GoReleaser)
@@ -78,8 +63,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GORELEASER_SKIP_PUBLISH: true
-          GORELEASER_SKIP_CHECK_DIRTY: true
         with:
           distribution: goreleaser
           version: v2.12.0
-          args: release --clean
+          args: release

@@ -5,9 +5,8 @@ builds:
     goos:
       - windows
     goarch:
-      - 386      # 32-bit Windows
       - amd64    # 64-bit Windows
-      # skip arm64
+      # skip arm64 and i386
     ldflags:
       - -H=windowsgui
     binary: "{{ .ProjectName }}-{{- if eq .Arch \"386\" }}x86{{ else if eq .Arch \"amd64\" }}x64{{ else }}{{ .Arch }}{{ end }}-v{{ .Version }}"
