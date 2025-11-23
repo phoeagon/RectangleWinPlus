@@ -64,11 +64,32 @@ func main() {
 	help := flag.Bool("help", false, "show this help message")
 	action := flag.String("action", "", "action to perform (moveToTop, moveToBottom, moveToLeft, moveToRight, moveToTopLeft, moveToTopRight, moveToBottomLeft, moveToBottomRight, maximize, almostMaximize, makeFullHeight, makeLarger, makeSmaller)")
 	loadTray := flag.Bool("load_tray", true, "load tray icon")
+	version := flag.Bool("version", false, "show version information")
+	helpfull := flag.Bool("helpfull", false, "show detailed help message")
 	flag.Parse()
+
+	if *debug {
+		// FixConsole ensures that we can see stdout/stderr in the console
+		// even if the app is built as a GUI app (windowsgui).
+		if err := fixconsole.FixConsoleIfNeeded(); err != nil {
+			fmt.Printf("warn: fixconsole: %v\n", err)
+		}
+	}
 
 	// Handle help flag
 	if *help {
+		fixconsole.FixConsoleIfNeeded()
 		flag.Usage()
+		return
+	}
+
+	if *version {
+		fixconsole.FixConsoleIfNeeded()
+		fmt.Println("RectangleWin Plus - Window management utility for Windows")
+		fmt.Println("Version: " + currentVersion)
+		if !*debug {
+			showMessageBox(fmt.Sprintf("RectangleWin Plus \n - Version: %s", currentVersion))
+		}
 		return
 	}
 
@@ -79,14 +100,6 @@ func main() {
 		}
 		fmt.Println("All RectangleWinPlus.exe processes terminated successfully")
 		return
-	}
-
-	if *debug {
-		// FixConsole ensures that we can see stdout/stderr in the console
-		// even if the app is built as a GUI app (windowsgui).
-		if err := fixconsole.FixConsoleIfNeeded(); err != nil {
-			fmt.Printf("warn: fixconsole: %v\n", err)
-		}
 	}
 
 	runtime.LockOSThread() // since we bind hotkeys etc that need to dispatch their message here
@@ -226,6 +239,16 @@ func main() {
 		}
 		fmt.Printf("warn: unknown action: %s\n", *action)
 		os.Exit(1)
+	}
+
+	if *helpfull {
+		fixconsole.FixConsoleIfNeeded()
+		flag.Usage()
+		fmt.Println("\nFeatures:")
+		for feature, value := range featureMap {
+			fmt.Printf("%s: %s\n", feature, value.DisplayName)
+		}
+		return
 	}
 
 	hks = []HotKey{}

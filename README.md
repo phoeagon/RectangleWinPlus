@@ -171,6 +171,16 @@ available:
   - <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>J</kbd>: bottom-left ½, ⅔ and ⅓
   - <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>K</kbd>: bottom-right ½, ⅔ and ⅓
 
+## Commandline
+
+The following commandline flags are available:
+
+- `--killall`: kill all running instances of RectangleWinPlus.exe
+- `--debug`: enable debug mode: attaches stderr/stdout to console
+- `--version`: shows version information. When run in GUI mode, a message box will be shown. If `--debug` is specified, the version information will be printed to console and no dialog box will be shown.
+- `--helpfull`: shows detailed help message. This also prints out details about each action.
+- `--action=<action>`: perform the specified action. `action` can be any of the `bindfeature`s in the config file, such as `moveToTop`, `moveToBottom`, `moveToLeft`, `moveToRight`, `moveToTopLeft`, `moveToTopRight`, `moveToBottomLeft`, `moveToBottomRight`, `makeSmaller`, `makeLarger`, `makeFullHeight`, `maximize`, `almostMaximize`, `moveToCenter`, `toggleAlwaysOnTop`, `nextDisplay`, `prevDisplay`.
+
 ## Development (Install from source)
 
 With Go 1.17+ installed, clone this repository and run:
