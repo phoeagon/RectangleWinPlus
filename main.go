@@ -52,9 +52,25 @@ type Feature struct {
 var features []Feature
 
 func main() {
-	debug := flag.Bool("debug", false, "enable debug mode (fix console)")
+	// Set custom usage message
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "RectangleWin Plus - Window management utility for Windows\n\n")
+		fmt.Fprintf(os.Stderr, "Usage: %s [options]\n\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Options:\n")
+		flag.PrintDefaults()
+		fmt.Fprintf(os.Stderr, "\nFor more information, visit: https://github.com/phoeagon/RectangleWinPlus\n")
+	}
+
+	debug := flag.Bool("debug", false, "enable debug mode (show console output)")
 	killAll := flag.Bool("killall", false, "kill all RectangleWinPlus instances and quit")
+	help := flag.Bool("help", false, "show this help message")
 	flag.Parse()
+
+	// Handle help flag
+	if *help {
+		flag.Usage()
+		return
+	}
 
 	if *killAll {
 		if err := killAllRectangleWinPlusProcesses(); err != nil {
