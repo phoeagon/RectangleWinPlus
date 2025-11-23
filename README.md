@@ -64,6 +64,9 @@ for corner and edge functions. (Using default keymap, not including the popular 
 The following are also available if you use the attached `config.yaml`:
   - <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>&uarr;</kbd>: maximize window height.
 
+Context menu shows the current config and bound hotkeys. Alternatively you can also click on items on the menu to perform an operation.
+![context menu](./assets/menu.png)
+
 ## Why?
 
 It seems that no window snapping utility for Windows is capable of letting
