@@ -55,12 +55,12 @@ for corner and edge functions. (Using default keymap, not including the popular 
 
 - **Always On Top (toggle)**: <kbd>Win</kbd>+<kbd>Alt</kbd>+<kbd>A</kbd>
 
-= **Make Larger**: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>=</kbd>
-= **Make smaller**: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>-</kbd>
+- **Make Larger**: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>=</kbd>
+- **Make smaller**: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>-</kbd>
 
-= **Make full height**: <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>$uarr;</kbd>
-= **Next display**: <kbd>Ctrl</kbd>+<kbd>Win</kbd>+<kbd>Alt</kbd>+<kbd>$rarr;</kbd>
-= **Prev display**: <kbd>Ctrl</kbd>+<kbd>Win</kbd>+<kbd>Alt</kbd>+<kbd>$larr;</kbd>
+- **Make full height**: <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>$uarr;</kbd>
+- **Next display**: <kbd>Ctrl</kbd>+<kbd>Win</kbd>+<kbd>Alt</kbd>+<kbd>$rarr;</kbd>
+- **Prev display**: <kbd>Ctrl</kbd>+<kbd>Win</kbd>+<kbd>Alt</kbd>+<kbd>$larr;</kbd>
 
 The following are also available if you use the attached `config.yaml`:
   - <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>&uarr;</kbd>: maximize window height.
@@ -83,7 +83,7 @@ are not offering enough hotkey support.
 
 ## Configuration
 
-Configuration could be achieved by changing `config.yaml` in the same folder.
+Configuration could be achieved by changing %HOME%/.config/RectangleWin/config.yaml in the same folder.
 
 This file has the following structure:
 
