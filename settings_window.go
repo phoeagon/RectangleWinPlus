@@ -3,12 +3,30 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
 	"gopkg.in/yaml.v3"
 )
+
+func restartMainApp() {
+	exe, err := os.Executable()
+	if err != nil {
+		fmt.Printf("Failed to get executable path: %v\n", err)
+		return
+	}
+
+	// Launch the main app without the --settings-window flag
+	cmd := exec.Command(exe)
+	if err := cmd.Start(); err != nil {
+		fmt.Printf("Failed to restart main app: %v\n", err)
+		walk.MsgBox(nil, "Error", fmt.Sprintf("Failed to restart application: %v", err), walk.MsgBoxIconError)
+	} else {
+		fmt.Println("Main application restarted successfully")
+	}
+}
 
 type SettingsWindowApp struct {
 	*walk.MainWindow
@@ -101,6 +119,7 @@ func runSettingsWindow() {
 					PushButton{
 						Text: "Cancel",
 						OnClicked: func() {
+							restartMainApp()
 							sw.Close()
 						},
 					},
@@ -110,6 +129,9 @@ func runSettingsWindow() {
 	}).Run(); err != nil {
 		fmt.Printf("Failed to open settings UI: %v\n", err)
 	}
+
+	// Relaunch main app after settings window closes
+	restartMainApp()
 }
 
 func buildSettingsRows(sw *SettingsWindowApp) []Widget {
@@ -246,8 +268,9 @@ func saveSettings(sw *SettingsWindowApp) {
 		return
 	}
 
-	walk.MsgBox(sw, "Success", "Settings saved! Please restart RectangleWin Plus for changes to take effect.", walk.MsgBoxIconInformation)
+	walk.MsgBox(sw, "Success", "Settings saved! Restarting RectangleWin Plus...", walk.MsgBoxIconInformation)
 	sw.Close()
+	// Main app will be restarted when runSettingsWindow returns
 }
 
 func mapWalkKeyToName(key walk.Key) string {

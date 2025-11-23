@@ -5,6 +5,8 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/getlantern/systray"
 )
 
 func openSettingsUI() {
@@ -20,7 +22,12 @@ func openSettingsUI() {
 	if err := cmd.Start(); err != nil {
 		fmt.Printf("Failed to launch settings window: %v\n", err)
 		showMessageBox(fmt.Sprintf("Failed to open settings: %v", err))
+		return
 	}
+
+	// Exit the main application to release hotkeys
+	fmt.Println("Settings window launched, exiting main process...")
+	systray.Quit()
 }
 
 func formatHotkey(kb KeyBinding) string {
