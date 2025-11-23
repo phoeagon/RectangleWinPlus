@@ -64,6 +64,7 @@ func main() {
 	debug := flag.Bool("debug", false, "enable debug mode (show console output)")
 	killAll := flag.Bool("killall", false, "kill all RectangleWinPlus instances and quit")
 	help := flag.Bool("help", false, "show this help message")
+	action := flag.String("action", "", "action to perform (moveToTop, moveToBottom, moveToLeft, moveToRight, moveToTopLeft, moveToTopRight, moveToBottomLeft, moveToBottomRight, maximize, almostMaximize, makeFullHeight, makeLarger, makeSmaller)")
 	flag.Parse()
 
 	// Handle help flag
@@ -217,6 +218,16 @@ func main() {
 			}
 			fmt.Printf("> toggled always on top: %v\n", hwnd)
 		}},
+	}
+
+	if *action != "" {
+		if feature, ok := featureMap[*action]; ok {
+			feature.Callback()
+			fmt.Printf("%s Action completed successfully\n", *action)
+			os.Exit(0)
+		}
+		fmt.Printf("warn: unknown action: %s\n", *action)
+		os.Exit(1)
 	}
 
 	hks = []HotKey{}
