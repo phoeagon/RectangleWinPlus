@@ -17,6 +17,7 @@ package main
 import (
 	_ "embed"
 	"fmt"
+	"os"
 	"os/exec"
 
 	"github.com/getlantern/systray"
@@ -27,6 +28,7 @@ import (
 var icon []byte
 
 const repo = "https://github.com/phoeagon/RectangleWinPlus"
+const releases = "https://github.com/phoeagon/RectangleWinPlus/releases"
 
 func initTray() {
 	systray.Register(onReady, onExit)
@@ -46,6 +48,15 @@ func onReady() {
 	go func() {
 		for range mRepo.ClickedCh {
 			if err := w32.ShellExecute(0, "open", repo, "", "", w32.SW_SHOWNORMAL); err != nil {
+				fmt.Printf("failed to launch browser: (%d), %v\n", w32.GetLastError(), err)
+			}
+		}
+	}()
+
+	updates := systray.AddMenuItem("Check updates", "")
+	go func() {
+		for range updates.ClickedCh {
+			if err := w32.ShellExecute(0, "open", releases, "", "", w32.SW_SHOWNORMAL); err != nil {
 				fmt.Printf("failed to launch browser: (%d), %v\n", w32.GetLastError(), err)
 			}
 		}
@@ -109,6 +120,24 @@ func onReady() {
 		msg += "\nTo change this config, update the config file at %HOME/.config/RectangleWinPlus/config.json"
 		showMessageBox(msg)
 	}()
+	resetToDefault := systray.AddMenuItem("Reset to default", "")
+	go func() {
+		<-resetToDefault.ClickedCh
+		configFilePath, err := getValidConfigPathOrCreate()
+		if err != nil {
+			showMessageBox(fmt.Sprintf("Failed to locate config file: %v", err))
+			return
+		}
+		if err := os.Remove(configFilePath); err != nil && !os.IsNotExist(err) {
+			showMessageBox(fmt.Sprintf("Failed to remove config file: %v", err))
+			return
+		}
+		maybeDropExampleConfigFile(configFilePath)
+		showMessageBox("Configuration reset to default. Restarting RectangleWinPlus...")
+		shouldRestart = true
+		systray.Quit()
+	}()
+
 	systray.AddSeparator()
 	menuHeader := systray.AddMenuItem("Features", "")
 	menuHeader.Disable()
