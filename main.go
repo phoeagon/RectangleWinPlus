@@ -65,6 +65,7 @@ func main() {
 	killAll := flag.Bool("killall", false, "kill all RectangleWinPlus instances and quit")
 	help := flag.Bool("help", false, "show this help message")
 	action := flag.String("action", "", "action to perform (moveToTop, moveToBottom, moveToLeft, moveToRight, moveToTopLeft, moveToTopRight, moveToBottomLeft, moveToBottomRight, maximize, almostMaximize, makeFullHeight, makeLarger, makeSmaller)")
+	loadTray := flag.Bool("load_tray", true, "load tray icon")
 	flag.Parse()
 
 	// Handle help flag
@@ -219,7 +220,6 @@ func main() {
 			fmt.Printf("> toggled always on top: %v\n", hwnd)
 		}},
 	}
-
 	if *action != "" {
 		if feature, ok := featureMap[*action]; ok {
 			feature.Callback()
@@ -309,7 +309,9 @@ func main() {
 	// however it's not clear if GetMessage(0,0) will continue to work
 	// as we run "go initTray()" and not pin the thread that initializes the
 	// tray.
-	initTray()
+	if *loadTray {
+		initTray()
+	}
 	if err := msgLoop(); err != nil {
 		panic(err)
 	}

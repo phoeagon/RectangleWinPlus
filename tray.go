@@ -44,6 +44,13 @@ func onReady() {
 		panic(err)
 	}
 
+	mAbout := systray.AddMenuItem("About", "")
+	go func() {
+		for range mAbout.ClickedCh {
+			showMessageBox("RectangleWin Plus\nVersion: " + currentVersion + "\n\n" + "Copyright (c) 2025 phoeagon.\nhttp://github.com/phoeagon/RectangleWinPlus")
+		}
+	}()
+
 	mRepo := systray.AddMenuItem("Documentation", "")
 	go func() {
 		for range mRepo.ClickedCh {
