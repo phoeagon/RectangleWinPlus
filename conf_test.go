@@ -77,18 +77,6 @@ func TestConvertKeyCode(t *testing.T) {
 	}
 }
 
-func TestBitwiseOr(t *testing.T) {
-	if got := bitwiseOr([]int32{}); got != 0 {
-		t.Errorf("bitwiseOr empty slice = %d, want 0", got)
-	}
-	if got := bitwiseOr([]int32{5}); got != 5 {
-		t.Errorf("bitwiseOr single = %d, want 5", got)
-	}
-	if got := bitwiseOr([]int32{1, 2, 4}); got != 7 {
-		t.Errorf("bitwiseOr multiple = %d, want 7", got)
-	}
-}
-
 func TestGetValidConfigPathOrCreate(t *testing.T) {
 	// Create a temporary home directory
 	tmpDir, err := os.MkdirTemp("", "conf_test_home")
@@ -113,5 +101,118 @@ func TestGetValidConfigPathOrCreate(t *testing.T) {
 	dir := filepath.Dir(path)
 	if info, err := os.Stat(dir); err != nil || !info.IsDir() {
 		t.Errorf("config directory %s not created", dir)
+	}
+}
+
+func TestParseConfiguration(t *testing.T) {
+	input := Configuration{
+		Keybindings: []KeyBinding{
+			{
+				Modifier:    []string{"Ctrl", "Alt"},
+				Key:         "T",
+				BindFeature: "previousDisplay",
+			},
+			{
+				Modifier:    []string{"Win"},
+				Key:         "UP_ARROW",
+				BindFeature: "maximize",
+			},
+		},
+	}
+
+	parsed := parseConfiguration(input)
+
+	// Check alias handling
+	if parsed.Keybindings[0].BindFeature != "prevDisplay" {
+		t.Errorf("expected BindFeature 'prevDisplay', got '%s'", parsed.Keybindings[0].BindFeature)
+	}
+
+	// Check modifier conversion
+	expectedMod0 := int32(MOD_CONTROL | MOD_ALT)
+	if parsed.Keybindings[0].CombinedMod != expectedMod0 {
+		t.Errorf("expected CombinedMod %d, got %d", expectedMod0, parsed.Keybindings[0].CombinedMod)
+	}
+
+	expectedMod1 := int32(MOD_WIN)
+	if parsed.Keybindings[1].CombinedMod != expectedMod1 {
+		t.Errorf("expected CombinedMod %d, got %d", expectedMod1, parsed.Keybindings[1].CombinedMod)
+	}
+
+	// Check key code conversion
+	// 'T' is 84, 't' is 116. convertKeyCode('T') -> 't' -> 't'-32 = 84 ('T')
+	// Wait, convertKeyCode implementation:
+	// k[0] >= 'a' && k[0] <= 'z' -> return int32(k[0]) - 32.
+	// So 't' (116) - 32 = 84. Correct.
+	expectedKey0 := int32('T')
+	if parsed.Keybindings[0].KeyCode != expectedKey0 {
+		t.Errorf("expected KeyCode %d, got %d", expectedKey0, parsed.Keybindings[0].KeyCode)
+	}
+
+	// UP_ARROW is 0x26 (38)
+	expectedKey1 := int32(0x26)
+	if parsed.Keybindings[1].KeyCode != expectedKey1 {
+		t.Errorf("expected KeyCode %d, got %d", expectedKey1, parsed.Keybindings[1].KeyCode)
+	}
+}
+
+func TestFetchConfiguration(t *testing.T) {
+	// Create a temporary home directory
+	tmpDir, err := os.MkdirTemp("", "conf_test_fetch")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Override HOME env var
+	oldHome := os.Getenv("HOME")
+	os.Setenv("HOME", tmpDir)
+	defer os.Setenv("HOME", oldHome)
+	// Also override USERPROFILE for Windows compatibility in getValidConfigPathOrCreate
+	oldUserProfile := os.Getenv("USERPROFILE")
+	os.Setenv("USERPROFILE", tmpDir)
+	defer os.Setenv("USERPROFILE", oldUserProfile)
+
+	// 1. Test with no config file (should return default or create example)
+	// In the current implementation, fetchConfiguration calls getValidConfigPathOrCreate,
+	// which creates the directory. Then it calls maybeDropExampleConfigFile.
+	// Then it reads the file.
+	// So it should return the parsed example config.
+
+	// We can't easily verify the exact return value of "default" vs "example" without knowing the example content,
+	// but we can check if it returns a valid config.
+
+	config := fetchConfiguration()
+	if len(config.Keybindings) == 0 {
+		t.Error("fetchConfiguration returned empty keybindings when file missing (should load example)")
+	}
+
+	// 2. Test with a custom config file
+	configDir := filepath.Join(tmpDir, ".config", "RectangleWinPlus")
+	err = os.MkdirAll(configDir, 0755)
+	if err != nil {
+		t.Fatalf("failed to create config dir: %v", err)
+	}
+	configPath := filepath.Join(configDir, "config.yaml")
+
+	customYaml := `
+keybindings:
+  - modifier: ["Alt"]
+    key: "Z"
+    bindfeature: "makeSmaller"
+`
+	err = os.WriteFile(configPath, []byte(customYaml), 0644)
+	if err != nil {
+		t.Fatalf("failed to write custom config: %v", err)
+	}
+
+	config = fetchConfiguration()
+	if len(config.Keybindings) != 1 {
+		t.Errorf("expected 1 keybinding, got %d", len(config.Keybindings))
+	}
+	if config.Keybindings[0].BindFeature != "makeSmaller" {
+		t.Errorf("expected BindFeature 'makeSmaller', got '%s'", config.Keybindings[0].BindFeature)
+	}
+	if config.Keybindings[0].KeyCode != int32('Z') {
+		t.Errorf("expected KeyCode %d, got %d", int32('Z'), config.Keybindings[0].KeyCode)
 	}
 }

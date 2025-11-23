@@ -188,7 +188,11 @@ func fetchConfiguration() Configuration {
 		showMessageBox("Failed to parse config file at %s.\n")
 		return DEFAULT_CONF
 	}
+	myConfig = parseConfiguration(myConfig)
+	return myConfig
+}
 
+func parseConfiguration(myConfig Configuration) Configuration {
 	for i := range myConfig.Keybindings {
 		// handle alias
 		if myConfig.Keybindings[i].BindFeature == "previousDisplay" {
