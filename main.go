@@ -25,6 +25,7 @@ import (
 	"os/signal"
 	"reflect"
 	"runtime"
+	"time"
 
 	"github.com/getlantern/systray"
 	"github.com/gonutz/w32/v2"
@@ -34,6 +35,7 @@ import (
 )
 
 var lastResized w32.HWND
+var lastActiveWindow w32.HWND
 var hks []HotKey
 var shouldRestart bool
 
@@ -70,6 +72,16 @@ func main() {
 	fmt.Printf("autorun enabled=%v\n", autorun)
 	printMonitors()
 
+	go func() {
+		for {
+			time.Sleep(200 * time.Millisecond)
+			hwnd := w32.GetForegroundWindow()
+			if isZonableWindow(hwnd) {
+				lastActiveWindow = hwnd
+			}
+		}
+	}()
+
 	edgeFuncs := [][]resizeFunc{
 		{leftHalf, leftTwoThirds, leftOneThirds},
 		{rightHalf, rightTwoThirds, rightOneThirds},
@@ -84,9 +96,10 @@ func main() {
 	cornerFuncTurn := make([]int, len(cornerFuncs))
 
 	cycleFuncs := func(funcs [][]resizeFunc, turns *[]int, i int) {
-		hwnd := w32.GetForegroundWindow()
+		hwnd := getTargetWindow()
 		if hwnd == 0 {
-			panic("foreground window is NULL")
+			fmt.Println("foreground window is NULL")
+			return
 		}
 		if lastResized != hwnd {
 			*turns = make([]int, len(edgeFuncs)) // reset
@@ -120,29 +133,29 @@ func main() {
 		"moveToBottomLeft":  {"Move to Bottom-Left", func() { cycleCornerFuncs(2) }},
 		"moveToBottomRight": {"Move to Bottom-Right", func() { cycleCornerFuncs(3) }},
 		"makeLarger": {"Make Larger", func() {
-			if _, err := resize(w32.GetForegroundWindow(), makeLarger); err != nil {
+			if _, err := resize(getTargetWindow(), makeLarger); err != nil {
 				fmt.Printf("warn: resize: %v\n", err)
 			}
 		}},
 		"makeSmaller": {"Make Smaller", func() {
-			if _, err := resize(w32.GetForegroundWindow(), makeSmaller); err != nil {
+			if _, err := resize(getTargetWindow(), makeSmaller); err != nil {
 				fmt.Printf("warn: resize: %v\n", err)
 			}
 		}},
 		"makeFullHeight": {"Make Full Height", func() {
-			if _, err := resize(w32.GetForegroundWindow(), maxHeight); err != nil {
+			if _, err := resize(getTargetWindow(), maxHeight); err != nil {
 				fmt.Printf("warn: resize: %v\n", err)
 			}
 		}},
 		"nextDisplay": {"Next Display", func() {
 			lastResized = 0
-			if _, err := resizeAcrossMonitor(w32.GetForegroundWindow(), center, 1); err != nil {
+			if _, err := resizeAcrossMonitor(getTargetWindow(), center, 1); err != nil {
 				fmt.Printf("warn: resize: %v\n", err)
 			}
 		}},
 		"prevDisplay": {"Previous Display", func() {
 			lastResized = 0
-			if _, err := resizeAcrossMonitor(w32.GetForegroundWindow(), center, -1); err != nil {
+			if _, err := resizeAcrossMonitor(getTargetWindow(), center, -1); err != nil {
 				fmt.Printf("warn: resize: %v\n", err)
 			}
 		}},
@@ -154,12 +167,12 @@ func main() {
 		}},
 		"moveToCenter": {"Move to Center", func() {
 			lastResized = 0
-			if _, err := resize(w32.GetForegroundWindow(), center); err != nil {
+			if _, err := resize(getTargetWindow(), center); err != nil {
 				fmt.Printf("warn: resize: %v\n", err)
 			}
 		}},
 		"toggleAlwaysOnTop": {"Toggle Always On Top", func() {
-			hwnd := w32.GetForegroundWindow()
+			hwnd := getTargetWindow()
 			if err := toggleAlwaysOnTop(hwnd); err != nil {
 				fmt.Printf("warn: toggleAlwaysOnTop: %v\n", err)
 				return
@@ -168,7 +181,7 @@ func main() {
 		}},
 		"almostMaximize": {"Almost Maximize", func() {
 			lastResized = 0
-			if _, err := resize(w32.GetForegroundWindow(), func(disp, cur w32.RECT) w32.RECT {
+			if _, err := resize(getTargetWindow(), func(disp, cur w32.RECT) w32.RECT {
 				return makeSmaller(disp, disp)
 			}); err != nil {
 				fmt.Printf("warn: resize: %v\n", err)
@@ -400,7 +413,7 @@ func resizeAcrossMonitor(hwnd w32.HWND, f resizeFunc, monitorIndexDiff int) (boo
 }
 
 func maximize() error {
-	hwnd := w32.GetForegroundWindow()
+	hwnd := getTargetWindow()
 	if !isZonableWindow(hwnd) {
 		return errors.New("foreground window is not zonable")
 	}
@@ -408,6 +421,17 @@ func maximize() error {
 		return fmt.Errorf("failed to ShowWindow:%d", w32.GetLastError())
 	}
 	return nil
+}
+
+func getTargetWindow() w32.HWND {
+	hwnd := w32.GetForegroundWindow()
+	if isZonableWindow(hwnd) {
+		return hwnd
+	}
+	if isZonableWindow(lastActiveWindow) {
+		return lastActiveWindow
+	}
+	return 0
 }
 
 func toggleAlwaysOnTop(hwnd w32.HWND) error {
