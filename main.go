@@ -19,6 +19,7 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -29,6 +30,7 @@ import (
 	"github.com/gonutz/w32/v2"
 
 	"github.com/ahmetb/RectangleWin/w32ex"
+	"github.com/apenwarr/fixconsole"
 )
 
 var lastResized w32.HWND
@@ -36,6 +38,17 @@ var hks []HotKey
 var shouldRestart bool
 
 func main() {
+	debug := flag.Bool("debug", false, "enable debug mode (fix console)")
+	flag.Parse()
+
+	if *debug {
+		// FixConsole ensures that we can see stdout/stderr in the console
+		// even if the app is built as a GUI app (windowsgui).
+		if err := fixconsole.FixConsoleIfNeeded(); err != nil {
+			fmt.Printf("warn: fixconsole: %v\n", err)
+		}
+	}
+
 	runtime.LockOSThread() // since we bind hotkeys etc that need to dispatch their message here
 	if !w32ex.SetProcessDPIAware() {
 		panic("failed to set DPI aware")
@@ -87,6 +100,7 @@ func main() {
 	hks = []HotKey{}
 
 	myConfig := fetchConfiguration()
+	fmt.Println(myConfig)
 	// start from id 200
 	id := 200
 	for _, keyBinding := range myConfig.Keybindings {
@@ -257,6 +271,21 @@ func main() {
 					}
 					fmt.Printf("> toggled always on top: %v\n", hwnd)
 				}, bindFeature: "toggleAlwaysOnTop"}))
+		case "almostMaximize":
+			id += 1
+			hks = append(hks, (HotKey{
+				id:  id,
+				mod: int(keyBinding.CombinedMod) | MOD_NOREPEAT,
+				vk:  int(keyBinding.KeyCode),
+				callback: func() {
+					lastResized = 0 // cause edgeFuncTurn to be reset
+					if _, err := resize(w32.GetForegroundWindow(), func(disp, cur w32.RECT) w32.RECT {
+						return makeSmaller(disp, disp)
+					}); err != nil {
+						fmt.Printf("warn: resize: %v\n", err)
+						return
+					}
+				}, bindFeature: "almostMaximize"}))
 		default:
 			continue
 		}
@@ -277,7 +306,7 @@ func main() {
 		showMessageBox(msg)
 	}
 
-	exitCh := make(chan os.Signal)
+	exitCh := make(chan os.Signal, 1)
 	signal.Notify(exitCh, os.Interrupt)
 	go func() {
 		<-exitCh

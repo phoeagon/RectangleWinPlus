@@ -8,8 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-)
-import (
+
 	"github.com/gonutz/w32/v2"
 	"gopkg.in/yaml.v3"
 )
@@ -85,7 +84,6 @@ func convertModifier(keyName string) (int32, error) {
 	default:
 		return 0, errors.New("invalid keyname")
 	}
-	return 0, errors.New("unreachable")
 }
 
 func convertKeyCode(key string) (int32, error) {
@@ -111,6 +109,8 @@ func convertKeyCode(key string) (int32, error) {
 		return 189, nil
 	case "=":
 		return 187, nil
+	case "|", "\\":
+		return 124, nil
 	}
 	for id, v := range keyNames {
 		lv := strings.ToLower(v)
@@ -159,9 +159,9 @@ func maybeDropExampleConfigFile(target string) {
 		// Create the file and write the sample content
 		err := ioutil.WriteFile(target, configExampleYaml, 0644)
 		if err != nil {
-			fmt.Println("Failed to create file created: %s %v", target, err)
+			fmt.Printf("Failed to create file created: %s %v\n", target, err)
 		}
-		fmt.Println("File created: %s", target)
+		fmt.Printf("File created: %s\n", target)
 	}
 }
 

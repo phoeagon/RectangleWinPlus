@@ -98,3 +98,9 @@ keybindings:
       key: A
       bindfeature: toggleAlwaysOnTop
 
+    - modifier:
+        - Ctrl
+        - Alt
+      key: Q
+      bindfeature: almostMaximize
+

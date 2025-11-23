@@ -147,6 +147,7 @@ Here are some valid `bindfeature`s:
 //   makeLarger
 //   makeFullHeight
 //   maximize
+//   almostMaximize
 //   moveToCenter
 //   toggleAlwaysOnTop
 //   nextDisplay
