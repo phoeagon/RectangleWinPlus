@@ -109,7 +109,24 @@ func onReady() {
 		msg += "\nTo change this config, update the config file at %HOME/.config/RectangleWinPlus/config.json"
 		showMessageBox(msg)
 	}()
+	systray.AddSeparator()
+	menuHeader := systray.AddMenuItem("Features", "")
+	menuHeader.Disable()
 
+	for _, f := range features {
+		title := f.DisplayName
+		if f.HotkeyDesc != "" {
+			title += fmt.Sprintf(" (%s)", f.HotkeyDesc)
+		}
+		mItem := systray.AddMenuItem(title, "")
+		// Capture variable for closure
+		callback := f.Callback
+		go func() {
+			for range mItem.ClickedCh {
+				callback()
+			}
+		}()
+	}
 	systray.AddSeparator()
 	mRestart := systray.AddMenuItem("Restart to apply config", "")
 	go func() {

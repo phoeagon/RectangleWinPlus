@@ -118,7 +118,7 @@ func convertKeyCode(key string) (int32, error) {
 			return int32(id), nil
 		}
 	}
-	return 0, errors.New("Unknown key")
+	return 0, errors.New("unknown key")
 }
 
 func bitwiseOr(nums []int32) int32 {
@@ -140,14 +140,14 @@ func getValidConfigPathOrCreate() (string, error) {
 	if homeDir == "" {
 		// Give up generating a valid path.
 		// read or write the conf in current folder.
-		return DEFAULT_CONF_NAME, errors.New("Failed to find user home directory")
+		return DEFAULT_CONF_NAME, errors.New("failed to find user home directory")
 	}
 	configDir := filepath.Join(homeDir, filepath.FromSlash(DEFAULT_CONF_PATH_PREFIX))
 	err := os.MkdirAll(configDir, 0755)
 	if err != nil {
 		fmt.Printf("Error creating directory under user's home folder: %s", err)
 		// read or write the conf in current folder
-		return DEFAULT_CONF_NAME, fmt.Errorf("Failed to create folders under user's home directory: %s", configDir)
+		return DEFAULT_CONF_NAME, fmt.Errorf("failed to create folders under user's home directory: %s", configDir)
 	}
 	configPath := filepath.Join(configDir, DEFAULT_CONF_NAME)
 	return configPath, nil

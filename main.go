@@ -37,6 +37,15 @@ var lastResized w32.HWND
 var hks []HotKey
 var shouldRestart bool
 
+type Feature struct {
+	Name        string
+	DisplayName string
+	Callback    func()
+	HotkeyDesc  string
+}
+
+var features []Feature
+
 func main() {
 	debug := flag.Bool("debug", false, "enable debug mode (fix console)")
 	flag.Parse()
@@ -97,6 +106,76 @@ func main() {
 	cycleEdgeFuncs := func(i int) { cycleFuncs(edgeFuncs, &edgeFuncTurn, i) }
 	cycleCornerFuncs := func(i int) { cycleFuncs(cornerFuncs, &cornerFuncTurn, i) }
 
+	// Define all available features
+	featureMap := map[string]struct {
+		DisplayName string
+		Callback    func()
+	}{
+		"moveToTop":         {"Move to Top", func() { cycleEdgeFuncs(2) }},
+		"moveToBottom":      {"Move to Bottom", func() { cycleEdgeFuncs(3) }},
+		"moveToLeft":        {"Move to Left", func() { cycleEdgeFuncs(0) }},
+		"moveToRight":       {"Move to Right", func() { cycleEdgeFuncs(1) }},
+		"moveToTopLeft":     {"Move to Top-Left", func() { cycleCornerFuncs(0) }},
+		"moveToTopRight":    {"Move to Top-Right", func() { cycleCornerFuncs(1) }},
+		"moveToBottomLeft":  {"Move to Bottom-Left", func() { cycleCornerFuncs(2) }},
+		"moveToBottomRight": {"Move to Bottom-Right", func() { cycleCornerFuncs(3) }},
+		"makeLarger": {"Make Larger", func() {
+			if _, err := resize(w32.GetForegroundWindow(), makeLarger); err != nil {
+				fmt.Printf("warn: resize: %v\n", err)
+			}
+		}},
+		"makeSmaller": {"Make Smaller", func() {
+			if _, err := resize(w32.GetForegroundWindow(), makeSmaller); err != nil {
+				fmt.Printf("warn: resize: %v\n", err)
+			}
+		}},
+		"makeFullHeight": {"Make Full Height", func() {
+			if _, err := resize(w32.GetForegroundWindow(), maxHeight); err != nil {
+				fmt.Printf("warn: resize: %v\n", err)
+			}
+		}},
+		"nextDisplay": {"Next Display", func() {
+			lastResized = 0
+			if _, err := resizeAcrossMonitor(w32.GetForegroundWindow(), center, 1); err != nil {
+				fmt.Printf("warn: resize: %v\n", err)
+			}
+		}},
+		"prevDisplay": {"Previous Display", func() {
+			lastResized = 0
+			if _, err := resizeAcrossMonitor(w32.GetForegroundWindow(), center, -1); err != nil {
+				fmt.Printf("warn: resize: %v\n", err)
+			}
+		}},
+		"maximize": {"Maximize", func() {
+			lastResized = 0
+			if err := maximize(); err != nil {
+				fmt.Printf("warn: maximize: %v\n", err)
+			}
+		}},
+		"moveToCenter": {"Move to Center", func() {
+			lastResized = 0
+			if _, err := resize(w32.GetForegroundWindow(), center); err != nil {
+				fmt.Printf("warn: resize: %v\n", err)
+			}
+		}},
+		"toggleAlwaysOnTop": {"Toggle Always On Top", func() {
+			hwnd := w32.GetForegroundWindow()
+			if err := toggleAlwaysOnTop(hwnd); err != nil {
+				fmt.Printf("warn: toggleAlwaysOnTop: %v\n", err)
+				return
+			}
+			fmt.Printf("> toggled always on top: %v\n", hwnd)
+		}},
+		"almostMaximize": {"Almost Maximize", func() {
+			lastResized = 0
+			if _, err := resize(w32.GetForegroundWindow(), func(disp, cur w32.RECT) w32.RECT {
+				return makeSmaller(disp, disp)
+			}); err != nil {
+				fmt.Printf("warn: resize: %v\n", err)
+			}
+		}},
+	}
+
 	hks = []HotKey{}
 
 	myConfig := fetchConfiguration()
@@ -104,190 +183,48 @@ func main() {
 	// start from id 200
 	id := 200
 	for _, keyBinding := range myConfig.Keybindings {
-		switch keyBinding.BindFeature {
-		case "moveToTop":
+		if feature, ok := featureMap[keyBinding.BindFeature]; ok {
+			if keyBinding.BindFeature == "previousDisplay" {
+				keyBinding.BindFeature = "prevDisplay"
+			}
 			id += 1
-			hks = append(hks, (HotKey{
+			hk := HotKey{
 				id:          id,
 				mod:         int(keyBinding.CombinedMod) | MOD_NOREPEAT,
 				vk:          int(keyBinding.KeyCode),
-				callback:    func() { cycleEdgeFuncs(2) },
-				bindFeature: "moveToTop"}))
-		case "moveToBottom":
-			id += 1
-			hks = append(hks, (HotKey{
-				id:          id,
-				mod:         int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:          int(keyBinding.KeyCode),
-				callback:    func() { cycleEdgeFuncs(3) },
-				bindFeature: "moveToBottom"}))
-		case "moveToLeft":
-			id += 1
-			hks = append(hks, (HotKey{
-				id:          id,
-				mod:         int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:          int(keyBinding.KeyCode),
-				callback:    func() { cycleEdgeFuncs(0) },
-				bindFeature: "moveToLeft"}))
-		case "moveToRight":
-			id += 1
-			hks = append(hks, (HotKey{
-				id:          id,
-				mod:         int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:          int(keyBinding.KeyCode),
-				callback:    func() { cycleEdgeFuncs(1) },
-				bindFeature: "moveToRight"}))
-		case "moveToTopLeft":
-			id += 1
-			hks = append(hks, (HotKey{
-				id:          id,
-				mod:         int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:          int(keyBinding.KeyCode),
-				callback:    func() { cycleCornerFuncs(0) },
-				bindFeature: "moveToTopLeft"}))
-		case "moveToTopRight":
-			id += 1
-			hks = append(hks, (HotKey{
-				id:          id,
-				mod:         int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:          int(keyBinding.KeyCode),
-				callback:    func() { cycleCornerFuncs(1) },
-				bindFeature: "moveToTopRight"}))
-		case "moveToBottomLeft":
-			id += 1
-			hks = append(hks, (HotKey{
-				id:          id,
-				mod:         int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:          int(keyBinding.KeyCode),
-				callback:    func() { cycleCornerFuncs(2) },
-				bindFeature: "moveToBottomLeft"}))
-		case "moveToBottomRight":
-			id += 1
-			hks = append(hks, (HotKey{
-				id:          id,
-				mod:         int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:          int(keyBinding.KeyCode),
-				callback:    func() { cycleCornerFuncs(3) },
-				bindFeature: "moveToBottomRight"}))
-		case "makeLarger":
-			id += 1
-			hks = append(hks, (HotKey{
-				id:  id,
-				mod: int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:  int(keyBinding.KeyCode),
-				callback: func() {
-					if _, err := resize(w32.GetForegroundWindow(), makeLarger); err != nil {
-						fmt.Printf("warn: resize: %v\n", err)
-						return
-					}
-				}, bindFeature: "makeLarger"}))
-		case "makeSmaller":
-			id += 1
-			hks = append(hks, (HotKey{
-				id:  id,
-				mod: int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:  int(keyBinding.KeyCode),
-				callback: func() {
-					if _, err := resize(w32.GetForegroundWindow(), makeSmaller); err != nil {
-						fmt.Printf("warn: resize: %v\n", err)
-						return
-					}
-				}, bindFeature: "makeSmaller"}))
-		case "makeFullHeight":
-			id += 1
-			hks = append(hks, (HotKey{
-				id:  id,
-				mod: int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:  int(keyBinding.KeyCode),
-				callback: func() {
-					if _, err := resize(w32.GetForegroundWindow(), maxHeight); err != nil {
-						fmt.Printf("warn: resize: %v\n", err)
-						return
-					}
-				}, bindFeature: "makeFullHeight"}))
-		case "nextDisplay":
-			id += 1
-			hks = append(hks, (HotKey{
-				id:  id,
-				mod: int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:  int(keyBinding.KeyCode),
-				callback: func() {
-					lastResized = 0 // cause edgeFunction to be reset
-					if _, err := resizeAcrossMonitor(w32.GetForegroundWindow(), center, 1 /* next display */); err != nil {
-						fmt.Printf("warn: resize: %v\n", err)
-						return
-					}
-				}, bindFeature: "nextDisplay"}))
-		case "previousDisplay", "prevDisplay":
-			id += 1
-			hks = append(hks, (HotKey{
-				id:  id,
-				mod: int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:  int(keyBinding.KeyCode),
-				callback: func() {
-					lastResized = 0 // cause edgeFunction to be reset
-					if _, err := resizeAcrossMonitor(w32.GetForegroundWindow(), center, -1 /* PREV display */); err != nil {
-						fmt.Printf("warn: resize: %v\n", err)
-						return
-					}
-				}, bindFeature: "prevDisplay"}))
-		case "maximize":
-			id += 1
-			hks = append(hks, (HotKey{
-				id:  id,
-				mod: int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:  int(keyBinding.KeyCode),
-				callback: func() {
-					lastResized = 0 // cause edgeFuncTurn to be reset
-					if err := maximize(); err != nil {
-						fmt.Printf("warn: maximize: %v\n", err)
-						return
-					}
-				}, bindFeature: "maximize"}))
-		case "moveToCenter":
-			id += 1
-			hks = append(hks, (HotKey{
-				id:  id,
-				mod: int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:  int(keyBinding.KeyCode),
-				callback: func() {
-					lastResized = 0 // cause edgeFuncTurn to be reset
-					if _, err := resize(w32.GetForegroundWindow(), center); err != nil {
-						fmt.Printf("warn: resize: %v\n", err)
-						return
-					}
-				}, bindFeature: "moveToCenter"}))
-		case "toggleAlwaysOnTop":
-			id += 1
-			hks = append(hks, (HotKey{
-				id:  id,
-				mod: int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:  int(keyBinding.KeyCode),
-				callback: func() {
-					hwnd := w32.GetForegroundWindow()
-					if err := toggleAlwaysOnTop(hwnd); err != nil {
-						fmt.Printf("warn: toggleAlwaysOnTop: %v\n", err)
-						return
-					}
-					fmt.Printf("> toggled always on top: %v\n", hwnd)
-				}, bindFeature: "toggleAlwaysOnTop"}))
-		case "almostMaximize":
-			id += 1
-			hks = append(hks, (HotKey{
-				id:  id,
-				mod: int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:  int(keyBinding.KeyCode),
-				callback: func() {
-					lastResized = 0 // cause edgeFuncTurn to be reset
-					if _, err := resize(w32.GetForegroundWindow(), func(disp, cur w32.RECT) w32.RECT {
-						return makeSmaller(disp, disp)
-					}); err != nil {
-						fmt.Printf("warn: resize: %v\n", err)
-						return
-					}
-				}, bindFeature: "almostMaximize"}))
-		default:
-			continue
+				callback:    feature.Callback,
+				bindFeature: keyBinding.BindFeature,
+			}
+			hks = append(hks, hk)
+		}
+	}
+
+	// Populate global features list with hotkey info
+	// Order matters for the menu
+	orderedKeys := []string{
+		"leftHalf", "rightHalf", "topHalf", "bottomHalf", // These are not directly in map, they are part of cycle
+		"moveToLeft", "moveToRight", "moveToTop", "moveToBottom",
+		"moveToTopLeft", "moveToTopRight", "moveToBottomLeft", "moveToBottomRight",
+		"moveToCenter", "maximize", "almostMaximize", "makeLarger", "makeSmaller", "makeFullHeight",
+		"nextDisplay", "prevDisplay", "toggleAlwaysOnTop",
+	}
+
+	for _, key := range orderedKeys {
+		if val, ok := featureMap[key]; ok {
+			desc := ""
+			// Find if there is a hotkey for this feature
+			for _, hk := range hks {
+				if hk.bindFeature == key {
+					desc = hk.Describe()
+					break
+				}
+			}
+			features = append(features, Feature{
+				Name:        key,
+				DisplayName: val.DisplayName,
+				Callback:    val.Callback,
+				HotkeyDesc:  desc,
+			})
 		}
 	}
 

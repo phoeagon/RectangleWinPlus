@@ -56,11 +56,13 @@ func (h HotKey) Describe() string {
 }
 
 func RegisterHotKey(h HotKey) bool {
+	fmt.Printf("registering hotkey: %v\n", h)
 	if _, ok := hotkeyRegistrations[h.id]; ok {
 		panic("hotkey id already registered") // TODO ok for now
 	}
 	ok := w32ex.RegisterHotKey(0, h.id, h.mod, h.vk)
 	if ok {
+		fmt.Printf("registered hotkey: %v\n", h)
 		hotkeyRegistrations[h.id] = &h
 	}
 	return ok
