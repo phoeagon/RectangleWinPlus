@@ -18,9 +18,10 @@ import (
 	_ "embed"
 	"fmt"
 
+	"os/exec"
+
 	"github.com/getlantern/systray"
 	"github.com/gonutz/w32/v2"
-	"os/exec"
 )
 
 //go:embed assets/tray_icon.ico
@@ -98,6 +99,16 @@ func onReady() {
 		// Reloading programmatically is non-trivial because this program registers
 		// hotkeys, so it much synchronize to start the child process, but quit
 		// parent before the child starts to register hotkeys
+	}()
+	showLoadedConfig := systray.AddMenuItem("Show loaded config", "")
+	go func() {
+		<-showLoadedConfig.ClickedCh
+		msg := "Here are the availble hotkeys:\n\n"
+		for _, hotkey := range hks {
+			msg += fmt.Sprintf("%s: %v\n", hotkey.bindFeature, hotkey.Describe())
+		}
+		msg += "\nTo change this config, update the config file at %HOME/.config/RectangleWinPlus/config.json"
+		showMessageBox(msg)
 	}()
 
 	systray.AddSeparator()

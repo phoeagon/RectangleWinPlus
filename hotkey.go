@@ -28,6 +28,7 @@ var (
 type HotKey struct {
 	id, mod, vk int
 	callback    func()
+	bindFeature string
 }
 
 func (h HotKey) String() string { return fmt.Sprintf("mod=0x%x,vk=%d", h.mod, h.vk) }

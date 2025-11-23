@@ -32,6 +32,7 @@ import (
 )
 
 var lastResized w32.HWND
+var hks []HotKey
 
 func main() {
 	runtime.LockOSThread() // since we bind hotkeys etc that need to dispatch their message here
@@ -82,21 +83,21 @@ func main() {
 	cycleEdgeFuncs := func(i int) { cycleFuncs(edgeFuncs, &edgeFuncTurn, i) }
 	cycleCornerFuncs := func(i int) { cycleFuncs(cornerFuncs, &cornerFuncTurn, i) }
 
-	hks := []HotKey{
+	hks = []HotKey{
 		(HotKey{id: 50, mod: MOD_SHIFT | MOD_WIN, vk: 0x46 /*F*/, callback: func() {
 			lastResized = 0 // cause edgeFuncTurn to be reset
 			if err := maximize(); err != nil {
 				fmt.Printf("warn: maximize: %v\n", err)
 				return
 			}
-		}}),
+		}, bindFeature: "maximize"}),
 		(HotKey{id: 60, mod: MOD_ALT | MOD_WIN, vk: 0x43 /*C*/, callback: func() {
 			lastResized = 0 // cause edgeFuncTurn to be reset
 			if _, err := resize(w32.GetForegroundWindow(), center); err != nil {
 				fmt.Printf("warn: resize: %v\n", err)
 				return
 			}
-		}}),
+		}, bindFeature: "moveToCenter"}),
 		(HotKey{id: 70, mod: MOD_ALT | MOD_WIN, vk: 0x41 /*A*/, callback: func() {
 			hwnd := w32.GetForegroundWindow()
 			if err := toggleAlwaysOnTop(hwnd); err != nil {
@@ -104,7 +105,7 @@ func main() {
 				return
 			}
 			fmt.Printf("> toggled always on top: %v\n", hwnd)
-		}}),
+		}, bindFeature: "toggleAlwaysOnTop"}),
 	}
 
 	myConfig := fetchConfiguration()
@@ -115,59 +116,67 @@ func main() {
 		case "moveToTop":
 			id += 1
 			hks = append(hks, (HotKey{
-				id:       id,
-				mod:      int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:       int(keyBinding.KeyCode),
-				callback: func() { cycleEdgeFuncs(2) }}))
+				id:          id,
+				mod:         int(keyBinding.CombinedMod) | MOD_NOREPEAT,
+				vk:          int(keyBinding.KeyCode),
+				callback:    func() { cycleEdgeFuncs(2) },
+				bindFeature: "moveToTop"}))
 		case "moveToBottom":
 			id += 1
 			hks = append(hks, (HotKey{
-				id:       id,
-				mod:      int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:       int(keyBinding.KeyCode),
-				callback: func() { cycleEdgeFuncs(3) }}))
+				id:          id,
+				mod:         int(keyBinding.CombinedMod) | MOD_NOREPEAT,
+				vk:          int(keyBinding.KeyCode),
+				callback:    func() { cycleEdgeFuncs(3) },
+				bindFeature: "moveToBottom"}))
 		case "moveToLeft":
 			id += 1
 			hks = append(hks, (HotKey{
-				id:       id,
-				mod:      int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:       int(keyBinding.KeyCode),
-				callback: func() { cycleEdgeFuncs(0) }}))
+				id:          id,
+				mod:         int(keyBinding.CombinedMod) | MOD_NOREPEAT,
+				vk:          int(keyBinding.KeyCode),
+				callback:    func() { cycleEdgeFuncs(0) },
+				bindFeature: "moveToLeft"}))
 		case "moveToRight":
 			id += 1
 			hks = append(hks, (HotKey{
-				id:       id,
-				mod:      int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:       int(keyBinding.KeyCode),
-				callback: func() { cycleEdgeFuncs(1) }}))
+				id:          id,
+				mod:         int(keyBinding.CombinedMod) | MOD_NOREPEAT,
+				vk:          int(keyBinding.KeyCode),
+				callback:    func() { cycleEdgeFuncs(1) },
+				bindFeature: "moveToRight"}))
 		case "moveToTopLeft":
 			id += 1
 			hks = append(hks, (HotKey{
-				id:       id,
-				mod:      int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:       int(keyBinding.KeyCode),
-				callback: func() { cycleCornerFuncs(0) }}))
+				id:          id,
+				mod:         int(keyBinding.CombinedMod) | MOD_NOREPEAT,
+				vk:          int(keyBinding.KeyCode),
+				callback:    func() { cycleCornerFuncs(0) },
+				bindFeature: "moveToTopLeft"}))
 		case "moveToTopRight":
 			id += 1
 			hks = append(hks, (HotKey{
-				id:       id,
-				mod:      int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:       int(keyBinding.KeyCode),
-				callback: func() { cycleCornerFuncs(1) }}))
+				id:          id,
+				mod:         int(keyBinding.CombinedMod) | MOD_NOREPEAT,
+				vk:          int(keyBinding.KeyCode),
+				callback:    func() { cycleCornerFuncs(1) },
+				bindFeature: "moveToTopRight"}))
 		case "moveToBottomLeft":
 			id += 1
 			hks = append(hks, (HotKey{
-				id:       id,
-				mod:      int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:       int(keyBinding.KeyCode),
-				callback: func() { cycleCornerFuncs(2) }}))
+				id:          id,
+				mod:         int(keyBinding.CombinedMod) | MOD_NOREPEAT,
+				vk:          int(keyBinding.KeyCode),
+				callback:    func() { cycleCornerFuncs(2) },
+				bindFeature: "moveToBottomLeft"}))
 		case "moveToBottomRight":
 			id += 1
 			hks = append(hks, (HotKey{
-				id:       id,
-				mod:      int(keyBinding.CombinedMod) | MOD_NOREPEAT,
-				vk:       int(keyBinding.KeyCode),
-				callback: func() { cycleCornerFuncs(3) }}))
+				id:          id,
+				mod:         int(keyBinding.CombinedMod) | MOD_NOREPEAT,
+				vk:          int(keyBinding.KeyCode),
+				callback:    func() { cycleCornerFuncs(3) },
+				bindFeature: "moveToBottomRight"}))
 		case "makeLarger":
 			id += 1
 			hks = append(hks, (HotKey{
@@ -179,7 +188,7 @@ func main() {
 						fmt.Printf("warn: resize: %v\n", err)
 						return
 					}
-				}}))
+				}, bindFeature: "makeLarger"}))
 		case "makeSmaller":
 			id += 1
 			hks = append(hks, (HotKey{
@@ -191,7 +200,7 @@ func main() {
 						fmt.Printf("warn: resize: %v\n", err)
 						return
 					}
-				}}))
+				}, bindFeature: "makeSmaller"}))
 		case "makeFullHeight":
 			id += 1
 			hks = append(hks, (HotKey{
@@ -203,7 +212,7 @@ func main() {
 						fmt.Printf("warn: resize: %v\n", err)
 						return
 					}
-				}}))
+				}, bindFeature: "makeFullHeight"}))
 		case "nextDisplay":
 			id += 1
 			hks = append(hks, (HotKey{
@@ -216,7 +225,7 @@ func main() {
 						fmt.Printf("warn: resize: %v\n", err)
 						return
 					}
-				}}))
+				}, bindFeature: "nextDisplay"}))
 		case "previousDisplay", "prevDisplay":
 			id += 1
 			hks = append(hks, (HotKey{
@@ -229,7 +238,7 @@ func main() {
 						fmt.Printf("warn: resize: %v\n", err)
 						return
 					}
-				}}))
+				}, bindFeature: "prevDisplay"}))
 		default:
 			continue
 		}
