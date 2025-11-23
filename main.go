@@ -126,26 +126,47 @@ func main() {
 		DisplayName string
 		Callback    func()
 	}{
-		"moveToTop":         {"Move to Top", func() { cycleEdgeFuncs(2) }},
-		"moveToBottom":      {"Move to Bottom", func() { cycleEdgeFuncs(3) }},
-		"moveToLeft":        {"Move to Left", func() { cycleEdgeFuncs(0) }},
-		"moveToRight":       {"Move to Right", func() { cycleEdgeFuncs(1) }},
-		"moveToTopLeft":     {"Move to Top-Left", func() { cycleCornerFuncs(0) }},
-		"moveToTopRight":    {"Move to Top-Right", func() { cycleCornerFuncs(1) }},
-		"moveToBottomLeft":  {"Move to Bottom-Left", func() { cycleCornerFuncs(2) }},
-		"moveToBottomRight": {"Move to Bottom-Right", func() { cycleCornerFuncs(3) }},
-		"makeLarger": {"Make Larger", func() {
+		"moveToTop":         {"Top half", func() { cycleEdgeFuncs(2) }},
+		"moveToBottom":      {"Bottom half", func() { cycleEdgeFuncs(3) }},
+		"moveToLeft":        {"Left half", func() { cycleEdgeFuncs(0) }},
+		"moveToRight":       {"Right half", func() { cycleEdgeFuncs(1) }},
+		"moveToTopLeft":     {"Top-Left corner", func() { cycleCornerFuncs(0) }},
+		"moveToTopRight":    {"Top-Right corner", func() { cycleCornerFuncs(1) }},
+		"moveToBottomLeft":  {"Bottom-Left corner", func() { cycleCornerFuncs(2) }},
+		"moveToBottomRight": {"Bottom-Right corner", func() { cycleCornerFuncs(3) }},
+
+		"maximize": {"Maximize", func() {
+			lastResized = 0
+			if err := maximize(); err != nil {
+				fmt.Printf("warn: maximize: %v\n", err)
+			}
+		}},
+		"almostMaximize": {"Almost Maximize", func() {
+			lastResized = 0
+			if _, err := resize(getTargetWindow(), func(disp, cur w32.RECT) w32.RECT {
+				return makeSmaller(disp, disp)
+			}); err != nil {
+				fmt.Printf("warn: resize: %v\n", err)
+			}
+		}},
+		"makeFullHeight": {"Maximize Height", func() {
+			if _, err := resize(getTargetWindow(), maxHeight); err != nil {
+				fmt.Printf("warn: resize: %v\n", err)
+			}
+		}},
+		"makeLarger": {"Larger", func() {
 			if _, err := resize(getTargetWindow(), makeLarger); err != nil {
 				fmt.Printf("warn: resize: %v\n", err)
 			}
 		}},
-		"makeSmaller": {"Make Smaller", func() {
+		"makeSmaller": {"Smaller", func() {
 			if _, err := resize(getTargetWindow(), makeSmaller); err != nil {
 				fmt.Printf("warn: resize: %v\n", err)
 			}
 		}},
-		"makeFullHeight": {"Make Full Height", func() {
-			if _, err := resize(getTargetWindow(), maxHeight); err != nil {
+		"moveToCenter": {"Center", func() {
+			lastResized = 0
+			if _, err := resize(getTargetWindow(), center); err != nil {
 				fmt.Printf("warn: resize: %v\n", err)
 			}
 		}},
@@ -161,18 +182,6 @@ func main() {
 				fmt.Printf("warn: resize: %v\n", err)
 			}
 		}},
-		"maximize": {"Maximize", func() {
-			lastResized = 0
-			if err := maximize(); err != nil {
-				fmt.Printf("warn: maximize: %v\n", err)
-			}
-		}},
-		"moveToCenter": {"Move to Center", func() {
-			lastResized = 0
-			if _, err := resize(getTargetWindow(), center); err != nil {
-				fmt.Printf("warn: resize: %v\n", err)
-			}
-		}},
 		"toggleAlwaysOnTop": {"Toggle Always On Top", func() {
 			hwnd := getTargetWindow()
 			if err := toggleAlwaysOnTop(hwnd); err != nil {
@@ -180,14 +189,6 @@ func main() {
 				return
 			}
 			fmt.Printf("> toggled always on top: %v\n", hwnd)
-		}},
-		"almostMaximize": {"Almost Maximize", func() {
-			lastResized = 0
-			if _, err := resize(getTargetWindow(), func(disp, cur w32.RECT) w32.RECT {
-				return makeSmaller(disp, disp)
-			}); err != nil {
-				fmt.Printf("warn: resize: %v\n", err)
-			}
 		}},
 	}
 
