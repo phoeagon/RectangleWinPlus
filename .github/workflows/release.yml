@@ -21,7 +21,7 @@ jobs:
         go env -w GOOS=windows
         GOOS=windows go build -ldflags -H=windowsgui .
         mkdir build/
-        mv RectangleWin.exe build/RectangleWin.exe
+        mv RectangleWinPlus.exe build/RectangleWinPlus.exe
 
     - name: Create GitHub Release
       uses: fnkr/github-action-ghr@v1
