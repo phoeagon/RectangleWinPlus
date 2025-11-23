@@ -38,7 +38,7 @@ var lastActiveWindow w32.HWND
 var hks []HotKey
 var shouldRestart bool
 
-const currentVersion = "v1.0.2"
+const currentVersion = "v1.0.3"
 
 type Feature struct {
 	Name        string
