@@ -17,10 +17,7 @@ package main
 import (
 	_ "embed"
 	"fmt"
-
-	"os"
 	"os/exec"
-	"time"
 
 	"github.com/getlantern/systray"
 	"github.com/gonutz/w32/v2"
@@ -118,27 +115,7 @@ func onReady() {
 	go func() {
 		<-mRestart.ClickedCh
 		fmt.Println("clicked Restart")
-
-		unregisterAllHotKeys()
-		unregisterAllHotKeys()
-		unregisterAllHotKeys()
-
-		time.Sleep(2 * time.Second)
-
-		exe, err := os.Executable()
-		if err != nil {
-			fmt.Printf("failed to get executable path: %v\n", err)
-			return
-		}
-
-		_, err = os.StartProcess(exe, os.Args, &os.ProcAttr{
-			Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
-		})
-		if err != nil {
-			fmt.Printf("failed to start new process: %v\n", err)
-			return
-		}
-
+		shouldRestart = true
 		systray.Quit()
 	}()
 	mQuit := systray.AddMenuItem("Quit", "")

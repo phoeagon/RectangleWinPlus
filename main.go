@@ -33,6 +33,7 @@ import (
 
 var lastResized w32.HWND
 var hks []HotKey
+var shouldRestart bool
 
 func main() {
 	runtime.LockOSThread() // since we bind hotkeys etc that need to dispatch their message here
@@ -274,6 +275,25 @@ func main() {
 	initTray()
 	if err := msgLoop(); err != nil {
 		panic(err)
+	}
+
+	if shouldRestart {
+		fmt.Println("restarting...")
+		unregisterAllHotKeys()
+
+		exe, err := os.Executable()
+		if err != nil {
+			fmt.Printf("failed to get executable path: %v\n", err)
+			return
+		}
+
+		_, err = os.StartProcess(exe, os.Args, &os.ProcAttr{
+			Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
+		})
+		if err != nil {
+			fmt.Printf("failed to start new process: %v\n", err)
+			return
+		}
 	}
 }
 
