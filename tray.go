@@ -124,6 +124,13 @@ func onReady() {
 		// hotkeys, so it much synchronize to start the child process, but quit
 		// parent before the child starts to register hotkeys
 	}()
+
+	mSettings := systray.AddMenuItem("Settings UI", "")
+	go func() {
+		for range mSettings.ClickedCh {
+			openSettingsUI()
+		}
+	}()
 	showLoadedConfig := systray.AddMenuItem("Show loaded config", "")
 	go func() {
 		<-showLoadedConfig.ClickedCh

@@ -49,7 +49,38 @@ type Feature struct {
 
 var features []Feature
 
+type FeatureDefinition struct {
+	DisplayName string
+	Callback    func()
+}
+
+var featureDefinitions map[string]FeatureDefinition
+
+// Static map of feature display names for settings UI
+var featureDisplayNames = map[string]string{
+	"moveToTop":         "Top half",
+	"moveToBottom":      "Bottom half",
+	"moveToLeft":        "Left half",
+	"moveToRight":       "Right half",
+	"moveToTopLeft":     "Top-Left corner",
+	"moveToTopRight":    "Top-Right corner",
+	"moveToBottomLeft":  "Bottom-Left corner",
+	"moveToBottomRight": "Bottom-Right corner",
+	"maximize":          "Maximize",
+	"almostMaximize":    "Almost Maximize",
+	"makeFullHeight":    "Maximize Height",
+	"makeLarger":        "Larger",
+	"makeSmaller":       "Smaller",
+	"moveToCenter":      "Center",
+	"nextDisplay":       "Next Display",
+	"prevDisplay":       "Previous Display",
+	"toggleAlwaysOnTop": "Toggle Always On Top",
+}
+
 func main() {
+	// Initialize flags with ContinueOnError to handle parsing errors
+	flag.CommandLine.Init(os.Args[0], flag.ContinueOnError)
+
 	// Set custom usage message
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "RectangleWin Plus - Window management utility for Windows\n\n")
@@ -64,11 +95,35 @@ func main() {
 	help := flag.Bool("help", false, "show this help message")
 	action := flag.String("action", "", "action to perform (moveToTop, moveToBottom, moveToLeft, moveToRight, moveToTopLeft, moveToTopRight, moveToBottomLeft, moveToBottomRight, maximize, almostMaximize, makeFullHeight, makeLarger, makeSmaller)")
 	loadTray := flag.Bool("load_tray", true, "load tray icon")
-	flag.Parse()
+	settingsWindow := flag.Bool("settings-window", false, "open settings window (internal use)")
+
+	if err := flag.CommandLine.Parse(os.Args[1:]); err != nil {
+		if err != flag.ErrHelp {
+			fmt.Printf("Error parsing flags: %v\n", err)
+			os.Exit(1)
+		}
+		return
+	}
+
+	if *debug {
+		// FixConsole ensures that we can see stdout/stderr in the console
+		// even if the app is built as a GUI app (windowsgui).
+		if err := fixconsole.FixConsoleIfNeeded(); err != nil {
+			fmt.Printf("warn: fixconsole: %v\n", err)
+		}
+	}
 
 	// Handle help flag
 	if *help {
 		flag.Usage()
+		return
+	}
+
+	// Handle settings window flag
+	if *settingsWindow {
+		runtime.LockOSThread() // since we bind hotkeys etc that need to dispatch their message here
+
+		runSettingsWindow()
 		return
 	}
 
@@ -79,14 +134,6 @@ func main() {
 		}
 		fmt.Println("All RectangleWinPlus.exe processes terminated successfully")
 		return
-	}
-
-	if *debug {
-		// FixConsole ensures that we can see stdout/stderr in the console
-		// even if the app is built as a GUI app (windowsgui).
-		if err := fixconsole.FixConsoleIfNeeded(); err != nil {
-			fmt.Printf("warn: fixconsole: %v\n", err)
-		}
 	}
 
 	runtime.LockOSThread() // since we bind hotkeys etc that need to dispatch their message here
@@ -149,10 +196,7 @@ func main() {
 	cycleCornerFuncs := func(i int) { cycleFuncs(cornerFuncs, &cornerFuncTurn, i) }
 
 	// Define all available features
-	featureMap := map[string]struct {
-		DisplayName string
-		Callback    func()
-	}{
+	featureDefinitions = map[string]FeatureDefinition{
 		"moveToTop":         {"Top half", func() { cycleEdgeFuncs(2) }},
 		"moveToBottom":      {"Bottom half", func() { cycleEdgeFuncs(3) }},
 		"moveToLeft":        {"Left half", func() { cycleEdgeFuncs(0) }},
@@ -219,7 +263,7 @@ func main() {
 		}},
 	}
 	if *action != "" {
-		if feature, ok := featureMap[*action]; ok {
+		if feature, ok := featureDefinitions[*action]; ok {
 			feature.Callback()
 			fmt.Printf("%s Action completed successfully\n", *action)
 			os.Exit(0)
@@ -235,7 +279,7 @@ func main() {
 	// start from id 200
 	id := 200
 	for _, keyBinding := range myConfig.Keybindings {
-		if feature, ok := featureMap[keyBinding.BindFeature]; ok {
+		if feature, ok := featureDefinitions[keyBinding.BindFeature]; ok {
 			id += 1
 			hk := HotKey{
 				id:          id,
@@ -259,7 +303,7 @@ func main() {
 	}
 
 	for _, key := range orderedKeys {
-		if val, ok := featureMap[key]; ok {
+		if val, ok := featureDefinitions[key]; ok {
 			desc := ""
 			// Find if there is a hotkey for this feature
 			for _, hk := range hks {
