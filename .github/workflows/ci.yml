@@ -69,9 +69,11 @@ jobs:
         with:
           distribution: goreleaser
           version: v2.12.0
-          args: release --snapshot
+          # due to syso file,skipping validation
+          args: release --snapshot --skip-validate --rm-dist
         env:
           GORELEASER_SKIP_PUBLISH: true
+          GORELEASER_SKIP_CHECK_DIRTY: true
 
       # --- Publish release (GoReleaser) ---
       - name: Publish release (GoReleaser)
@@ -80,7 +82,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GORELEASER_SKIP_PUBLISH: true
+          GORELEASER_SKIP_CHECK_DIRTY: true
         with:
           distribution: goreleaser
           version: v2.12.0
-          args: release
+          args: release --skip-validate --rm-dist
