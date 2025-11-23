@@ -252,6 +252,33 @@ func startRecordingHotkey(sw *SettingsWindowApp, row *HotkeyRow) {
 			return
 		}
 
+		// Create temporary binding for validation
+		tempBinding := KeyBinding{
+			Key:          keyName,
+			KeyCode:      keyCode,
+			Modifier:     modifiers,
+			ModifierCode: modCodes,
+			CombinedMod:  bitwiseOr(modCodes),
+		}
+
+		// Check for duplicate hotkey
+		if conflictRow := findHotkeyConflict(sw, sw.recording, tempBinding); conflictRow != nil {
+			// Show error message
+			errorMsg := fmt.Sprintf("This hotkey is already assigned to '%s'.\n\nPlease choose a different key combination.", conflictRow.DisplayName)
+			walk.MsgBox(sw.MainWindow, "Duplicate Hotkey", errorMsg, walk.MsgBoxIconWarning)
+
+			// Reset the button text
+			sw.recording.UpdateText()
+
+			// Detach and cleanup
+			if sw.handlerID != 0 {
+				sw.recording.Button.KeyDown().Detach(sw.handlerID)
+				sw.handlerID = 0
+			}
+			sw.recording = nil
+			return
+		}
+
 		// Update binding
 		sw.recording.Binding.Key = keyName
 		sw.recording.Binding.KeyCode = keyCode
@@ -272,6 +299,49 @@ func startRecordingHotkey(sw *SettingsWindowApp, row *HotkeyRow) {
 
 func isModifierKey(key walk.Key) bool {
 	return key == walk.KeyControl || key == walk.KeyAlt || key == walk.KeyShift
+}
+
+// findHotkeyConflict checks if the given hotkey conflicts with any other row's hotkey
+// Returns the conflicting row if found, nil otherwise
+func findHotkeyConflict(sw *SettingsWindowApp, currentRow *HotkeyRow, newBinding KeyBinding) *HotkeyRow {
+	// Empty hotkey cannot conflict
+	if newBinding.Key == "" {
+		return nil
+	}
+
+	for _, row := range sw.rows {
+		// Skip the current row being edited
+		if row == currentRow {
+			continue
+		}
+
+		// Skip empty bindings
+		if row.Binding.Key == "" {
+			continue
+		}
+
+		// Check if hotkeys match
+		if hotkeyMatches(row.Binding, newBinding) {
+			return row
+		}
+	}
+
+	return nil
+}
+
+// hotkeyMatches checks if two key bindings represent the same hotkey
+func hotkeyMatches(kb1, kb2 KeyBinding) bool {
+	// Compare key codes
+	if kb1.KeyCode != kb2.KeyCode {
+		return false
+	}
+
+	// Compare combined modifiers
+	if kb1.CombinedMod != kb2.CombinedMod {
+		return false
+	}
+
+	return true
 }
 
 func saveSettings(sw *SettingsWindowApp) {
