@@ -70,7 +70,7 @@ jobs:
           distribution: goreleaser
           version: v2.12.0
           # due to syso file,skipping validation
-          args: release --snapshot
+          args: release --snapshot --clean
         env:
           GORELEASER_SKIP_PUBLISH: true
           GORELEASER_SKIP_CHECK_DIRTY: true
@@ -86,4 +86,4 @@ jobs:
         with:
           distribution: goreleaser
           version: v2.12.0
-          args: release
+          args: release --clean
