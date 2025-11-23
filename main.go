@@ -53,7 +53,17 @@ var features []Feature
 
 func main() {
 	debug := flag.Bool("debug", false, "enable debug mode (fix console)")
+	killAll := flag.Bool("killall", false, "kill all RectangleWinPlus instances and quit")
 	flag.Parse()
+
+	if *killAll {
+		if err := killAllRectangleWinPlusProcesses(); err != nil {
+			fmt.Printf("Failed to kill processes: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("All RectangleWinPlus.exe processes terminated successfully")
+		return
+	}
 
 	if *debug {
 		// FixConsole ensures that we can see stdout/stderr in the console
