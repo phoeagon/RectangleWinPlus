@@ -80,3 +80,21 @@ keybindings:
       key: RIGHT_ARROW
       bindfeature: nextDisplay
 
+    - modifier:
+        - Ctrl
+        - Alt
+      key: ENTER
+      bindfeature: maximize
+
+    - modifier:
+        - Win
+        - Alt
+      key: C
+      bindfeature: moveToCenter
+
+    - modifier:
+        - Win
+        - Alt
+      key: A
+      bindfeature: toggleAlwaysOnTop
+

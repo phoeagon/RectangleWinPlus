@@ -84,30 +84,7 @@ func main() {
 	cycleEdgeFuncs := func(i int) { cycleFuncs(edgeFuncs, &edgeFuncTurn, i) }
 	cycleCornerFuncs := func(i int) { cycleFuncs(cornerFuncs, &cornerFuncTurn, i) }
 
-	hks = []HotKey{
-		(HotKey{id: 50, mod: MOD_SHIFT | MOD_WIN, vk: 0x46 /*F*/, callback: func() {
-			lastResized = 0 // cause edgeFuncTurn to be reset
-			if err := maximize(); err != nil {
-				fmt.Printf("warn: maximize: %v\n", err)
-				return
-			}
-		}, bindFeature: "maximize"}),
-		(HotKey{id: 60, mod: MOD_ALT | MOD_WIN, vk: 0x43 /*C*/, callback: func() {
-			lastResized = 0 // cause edgeFuncTurn to be reset
-			if _, err := resize(w32.GetForegroundWindow(), center); err != nil {
-				fmt.Printf("warn: resize: %v\n", err)
-				return
-			}
-		}, bindFeature: "moveToCenter"}),
-		(HotKey{id: 70, mod: MOD_ALT | MOD_WIN, vk: 0x41 /*A*/, callback: func() {
-			hwnd := w32.GetForegroundWindow()
-			if err := toggleAlwaysOnTop(hwnd); err != nil {
-				fmt.Printf("warn: toggleAlwaysOnTop: %v\n", err)
-				return
-			}
-			fmt.Printf("> toggled always on top: %v\n", hwnd)
-		}, bindFeature: "toggleAlwaysOnTop"}),
-	}
+	hks = []HotKey{}
 
 	myConfig := fetchConfiguration()
 	// start from id 200
@@ -240,6 +217,46 @@ func main() {
 						return
 					}
 				}, bindFeature: "prevDisplay"}))
+		case "maximize":
+			id += 1
+			hks = append(hks, (HotKey{
+				id:  id,
+				mod: int(keyBinding.CombinedMod) | MOD_NOREPEAT,
+				vk:  int(keyBinding.KeyCode),
+				callback: func() {
+					lastResized = 0 // cause edgeFuncTurn to be reset
+					if err := maximize(); err != nil {
+						fmt.Printf("warn: maximize: %v\n", err)
+						return
+					}
+				}, bindFeature: "maximize"}))
+		case "moveToCenter":
+			id += 1
+			hks = append(hks, (HotKey{
+				id:  id,
+				mod: int(keyBinding.CombinedMod) | MOD_NOREPEAT,
+				vk:  int(keyBinding.KeyCode),
+				callback: func() {
+					lastResized = 0 // cause edgeFuncTurn to be reset
+					if _, err := resize(w32.GetForegroundWindow(), center); err != nil {
+						fmt.Printf("warn: resize: %v\n", err)
+						return
+					}
+				}, bindFeature: "moveToCenter"}))
+		case "toggleAlwaysOnTop":
+			id += 1
+			hks = append(hks, (HotKey{
+				id:  id,
+				mod: int(keyBinding.CombinedMod) | MOD_NOREPEAT,
+				vk:  int(keyBinding.KeyCode),
+				callback: func() {
+					hwnd := w32.GetForegroundWindow()
+					if err := toggleAlwaysOnTop(hwnd); err != nil {
+						fmt.Printf("warn: toggleAlwaysOnTop: %v\n", err)
+						return
+					}
+					fmt.Printf("> toggled always on top: %v\n", hwnd)
+				}, bindFeature: "toggleAlwaysOnTop"}))
 		default:
 			continue
 		}
