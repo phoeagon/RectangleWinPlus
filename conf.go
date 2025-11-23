@@ -10,10 +10,8 @@ import (
 	"strings"
 )
 import (
-	"github.com/davecgh/go-spew/spew"
-	"github.com/golobby/config/v3"
-	"github.com/golobby/config/v3/pkg/feeder"
 	"github.com/gonutz/w32/v2"
+	"gopkg.in/yaml.v3"
 )
 
 type KeyBinding struct {
@@ -85,7 +83,7 @@ func convertModifier(keyName string) (int32, error) {
 	case "win", "meta", "super":
 		return MOD_WIN, nil
 	default:
-		return 0, errors.New("invalid keyname")
+		return 0, fmt.Errorf("invalid keyname: %s", keyName)
 	}
 	return 0, errors.New("unreachable")
 }
@@ -113,14 +111,9 @@ func convertKeyCode(key string) (int32, error) {
 		return 189, nil
 	case "=":
 		return 187, nil
+	default:
+		return 0, fmt.Errorf("Unknown key %s", key)
 	}
-	for id, v := range keyNames {
-		lv := strings.ToLower(v)
-		if lv == k || lv == (k+" key") {
-			return int32(id), nil
-		}
-	}
-	return 0, errors.New("Unknown key")
 }
 
 func bitwiseOr(nums []int32) int32 {
@@ -134,7 +127,7 @@ func bitwiseOr(nums []int32) int32 {
 	return result
 }
 
-func getValidConfigPathOrCreate() string {
+func getValidConfigPathOrCreate() (string, error) {
 	homeDir := os.Getenv("HOME")
 	if homeDir == "" {
 		homeDir = os.Getenv("USERPROFILE")
@@ -142,17 +135,17 @@ func getValidConfigPathOrCreate() string {
 	if homeDir == "" {
 		// Give up generating a valid path.
 		// read or write the conf in current folder.
-		return DEFAULT_CONF_NAME
+		return DEFAULT_CONF_NAME, errors.New("Failed to find user home directory")
 	}
-	configDir := filepath.Join(homeDir, DEFAULT_CONF_PATH_PREFIX)
+	configDir := filepath.Join(homeDir, filepath.FromSlash(DEFAULT_CONF_PATH_PREFIX))
 	err := os.MkdirAll(configDir, 0755)
 	if err != nil {
 		fmt.Printf("Error creating directory under user's home folder: %s", err)
 		// read or write the conf in current folder
-		return DEFAULT_CONF_NAME
+		return DEFAULT_CONF_NAME, fmt.Errorf("Failed to create folders under user's home directory: %s", configDir)
 	}
 	configPath := filepath.Join(configDir, DEFAULT_CONF_NAME)
-	return configPath
+	return configPath, nil
 }
 
 func maybeDropExampleConfigFile(target string) {
@@ -168,21 +161,23 @@ func maybeDropExampleConfigFile(target string) {
 }
 
 func fetchConfiguration() Configuration {
-	spew.Dump(DEFAULT_CONF)
 	// Create a Configuration file.
 	myConfig := Configuration{}
 
 	// Yaml feeder
-	configFilePath := getValidConfigPathOrCreate()
-	maybeDropExampleConfigFile(configFilePath)
-	yamlFeeder := feeder.Yaml{Path: configFilePath}
-	c := config.New()
-	c.AddFeeder(yamlFeeder)
-	c.AddStruct(&myConfig)
-
-	err := c.Feed()
+	configFilePath, err := getValidConfigPathOrCreate()
+	if err == nil {
+		maybeDropExampleConfigFile(configFilePath)
+	}
+	data, err := os.ReadFile(configFilePath)
 	if err != nil {
-		fmt.Printf("warn: invalid config files found: %s %v\n", configFilePath, err)
+		fmt.Printf("Failed to load config file at expected path %s\n", configFilePath)
+		// use the last-ditch config
+		return DEFAULT_CONF
+	}
+
+	if err := yaml.Unmarshal(data, &myConfig); err != nil {
+		showMessageBox("Failed to parse config file at %s.\n")
 		return DEFAULT_CONF
 	}
 
@@ -207,6 +202,5 @@ func fetchConfiguration() Configuration {
 			}
 		}
 	}
-	spew.Dump(myConfig)
 	return myConfig
 }

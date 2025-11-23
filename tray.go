@@ -17,6 +17,7 @@ package main
 import (
 	_ "embed"
 	"fmt"
+
 	"github.com/getlantern/systray"
 	"github.com/gonutz/w32/v2"
 	"os/exec"
@@ -25,7 +26,7 @@ import (
 //go:embed assets/tray_icon.ico
 var icon []byte
 
-const repo = "https://github.com/ahmetb/RectangleWin"
+const repo = "https://github.com/phoeagon/RectangleWinPlus"
 
 func initTray() {
 	systray.Register(onReady, onExit)
@@ -33,8 +34,8 @@ func initTray() {
 
 func onReady() {
 	systray.SetIcon(icon)
-	systray.SetTitle("RectangleWin")
-	systray.SetTooltip("RectangleWin")
+	systray.SetTitle("RectangleWin Plus")
+	systray.SetTooltip("RectangleWin Plus")
 
 	autorun, err := AutoRunEnabled()
 	if err != nil {
@@ -82,10 +83,14 @@ func onReady() {
 	go func() {
 		<-mConfig.ClickedCh
 		fmt.Println("opening editor for default config")
-		configFilePath := getValidConfigPathOrCreate()
-		maybeDropExampleConfigFile(configFilePath)
+		configFilePath, err := getValidConfigPathOrCreate()
+		if err != nil {
+			showMessageBox(fmt.Sprintf(
+				"Can't locate config path under user home directory %s\n%v", configFilePath, err))
+			return
+		}
 		cmd := exec.Command("notepad.exe", configFilePath)
-		err := cmd.Start()
+		err = cmd.Start()
 		if err != nil {
 			showMessageBox(fmt.Sprintf("Failed to open config file %s\n%v", configFilePath, err))
 		}

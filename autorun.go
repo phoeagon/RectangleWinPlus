@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	AutoRunName = `RectangleWin`
+	AutoRunName = `RectangleWinPlus`
 	regKey      = `SOFTWARE\Microsoft\Windows\CurrentVersion\Run`
 )
 

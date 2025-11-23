@@ -16,8 +16,8 @@ package main
 import (
 	"strings"
 
-	"github.com/ahmetb/RectangleWin/w32ex"
 	"github.com/gonutz/w32/v2"
+	"github.com/phoeagon/RectangleWinPlus/w32ex"
 )
 
 const (
