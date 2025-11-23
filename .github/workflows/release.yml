@@ -19,9 +19,7 @@ jobs:
         go-version: '1.20'
 
     - name: Build
-      run: | 
-        rm app.syso
-        windres app.rc -o app.syso
+      run: |
         go env -w GOOS=windows
         GOOS=windows go build -ldflags -H=windowsgui .
         mkdir build/
