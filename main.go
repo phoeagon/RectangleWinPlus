@@ -238,9 +238,6 @@ func main() {
 	id := 200
 	for _, keyBinding := range myConfig.Keybindings {
 		if feature, ok := featureMap[keyBinding.BindFeature]; ok {
-			if keyBinding.BindFeature == "previousDisplay" {
-				keyBinding.BindFeature = "prevDisplay"
-			}
 			id += 1
 			hk := HotKey{
 				id:          id,

@@ -190,6 +190,9 @@ func fetchConfiguration() Configuration {
 	}
 
 	for i := range myConfig.Keybindings {
+		if myConfig.Keybindings[i].BindFeature == "previousDisplay" {
+			myConfig.Keybindings[i].BindFeature = "prevDisplay"
+		}
 		if len(myConfig.Keybindings[i].ModifierCode) == 0 {
 			for _, mod := range myConfig.Keybindings[i].Modifier {
 				if modCode, err := convertModifier(mod); err == nil {
