@@ -190,6 +190,7 @@ func fetchConfiguration() Configuration {
 	}
 
 	for i := range myConfig.Keybindings {
+		// handle alias
 		if myConfig.Keybindings[i].BindFeature == "previousDisplay" {
 			myConfig.Keybindings[i].BindFeature = "prevDisplay"
 		}

@@ -1,16 +1,7 @@
 # Copyright 2022 Ahmet Alp Balkan
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# ...
 
 name: RectangleWinPlus
 permissions:
@@ -18,49 +9,78 @@ permissions:
 on:
   push:
   pull_request:
+
 jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@master
-    - name: Setup Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: "1.20"
-    - id: go-cache-paths
-      run: |
-        echo "go-build=$(go env GOCACHE)" >> $GITHUB_OUTPUT
-        echo "go-mod=$(go env GOMODCACHE)" >> $GITHUB_OUTPUT
-    - name: go build cache
-      uses: actions/cache@v4
-      with:
-        key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
-        path: |
-          ${{ steps.go-cache-paths.outputs.go-build }}
-          ${{ steps.go-cache-paths.outputs.go-mod }}
-    - name: Ensure gofmt
-      run: test -z "$(gofmt -s -d .)"
-    - name: go.mod is tidied
-      run: go mod tidy && git diff --no-patch --exit-code
-    - name: go generate (Binary Version Information and Icon)
-      run: go generate
-    - name: Build-only (GoReleaser)
-      if: "!startsWith(github.ref, 'refs/tags/')"
-      uses: goreleaser/goreleaser-action@v2
-      with:
-        distribution: goreleaser
-        version: v2.12.0
-        args: release --snapshot
-      env:
-        GORELEASER_SKIP_PUBLISH: true
-    - name: Publish release (GoReleaser)
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: goreleaser/goreleaser-action@v2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GORELEASER_SKIP_PUBLISH: true
-      with:
-        distribution: goreleaser
-        version: v2.12.0
-        args: release
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.20"
+
+      - id: go-cache-paths
+        run: |
+          echo "go-build=$(go env GOCACHE)" >> $GITHUB_OUTPUT
+          echo "go-mod=$(go env GOMODCACHE)" >> $GITHUB_OUTPUT
+
+      - name: go build cache
+        uses: actions/cache@v4
+        with:
+          key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
+          path: |
+            ${{ steps.go-cache-paths.outputs.go-build }}
+            ${{ steps.go-cache-paths.outputs.go-mod }}
+
+      - name: Ensure gofmt
+        run: test -z "$(gofmt -s -d .)"
+
+      - name: go.mod is tidied
+        run: go mod tidy && git diff --no-patch --exit-code
+
+      - name: go generate (Binary Version Information and Icon)
+        run: go generate
+
+      # --- Install MinGW-w64 for windres cross-compilation ---
+      - name: Install mingw-w64
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mingw-w64
+
+      # --- Remove any committed syso files ---
+      - name: Clean old .syso files
+        run: rm -f *.syso
+
+      # --- Generate fresh .syso files for Windows cross builds ---
+      - name: Generate Windows resources
+        run: |
+          # 64-bit Windows
+          x86_64-w64-mingw32-windres app.rc -O coff -o rsrc_windows_amd64.syso
+          # 32-bit Windows
+          i686-w64-mingw32-windres app.rc -O coff -o rsrc_windows_386.syso
+
+      # --- Build-only (snapshot) with GoReleaser ---
+      - name: Build-only (GoReleaser)
+        if: "!startsWith(github.ref, 'refs/tags/')"
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          distribution: goreleaser
+          version: v2.12.0
+          args: release --snapshot
+        env:
+          GORELEASER_SKIP_PUBLISH: true
+
+      # --- Publish release (GoReleaser) ---
+      - name: Publish release (GoReleaser)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: goreleaser/goreleaser-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GORELEASER_SKIP_PUBLISH: true
+        with:
+          distribution: goreleaser
+          version: v2.12.0
+          args: release
