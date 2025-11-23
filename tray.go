@@ -25,7 +25,7 @@ import (
 //go:embed assets/tray_icon.ico
 var icon []byte
 
-const repo = "https://github.com/ahmetb/RectangleWin"
+const repo = "https://github.com/phoeagon/RectangleWinPlus"
 
 func initTray() {
 	systray.Register(onReady, onExit)
@@ -33,8 +33,8 @@ func initTray() {
 
 func onReady() {
 	systray.SetIcon(icon)
-	systray.SetTitle("RectangleWin")
-	systray.SetTooltip("RectangleWin")
+	systray.SetTitle("RectangleWin Plus")
+	systray.SetTooltip("RectangleWin Plus")
 
 	autorun, err := AutoRunEnabled()
 	if err != nil {

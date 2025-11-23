@@ -1,4 +1,14 @@
-# RectangleWin
+# RectangleWin Plus
+
+## Origin
+
+This is a manual branch out of [phoeagon/RectangleWin](http://github.com/phoeagon/RectangleWin), which
+is a branch of [ahmetb/RectangleWin](http://github.com/ahmetb/RectangleWin).
+
+This is branched out from RectangleWin to introduce breaking changes and is not
+committed to remaining backward compatible with the original software.
+
+## Overview
 
 A minimalistic Windows rewrite of macOS
 [Rectangle.app](https://rectangleapp.com)/[Spectacle.app](https://www.spectacleapp.com/).
@@ -14,7 +24,7 @@ only using hotkeys:
 
 ## Install
 
-1. Go to [Releases](https://github.com/ahmetb/RectangleWin/releases) and
+1. Go to [Releases](https://github.com/phoeagon/RectangleWinPlus/releases) and
    download the suitable binary for your architecture (typically x64).
 
 2. Launch the `.exe` file. Now the program icon should be visible on system
@@ -26,14 +36,14 @@ only using hotkeys:
 ## Keyboard Bindings
 
 - **Snap to edges** (left/right/top/bottom ½, ⅔, ⅓):
-  - <kbd>Win</kbd> + <kbd>Alt</kbd> + <kbd>&larr;</kbd><kbd>&rarr;</kbd><kbd>&uarr;</kbd><kbd>&darr;</kbd>
+  - <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>&larr;</kbd><kbd>&rarr;</kbd><kbd>&uarr;</kbd><kbd>&darr;</kbd>
   - Press multiple times to alternate between ½, ⅔ and ⅓.
 
 - **Corner snapping**
-  - <kbd>Win</kbd> + <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>&larr;</kbd>: top-left ½, ⅔ and ⅓
-  - <kbd>Win</kbd> + <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>&uarr;</kbd>: top-right ½, ⅔ and ⅓
-  - <kbd>Win</kbd> + <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>&darr;</kbd>: bottom-left ½, ⅔ and ⅓
-  - <kbd>Win</kbd> + <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>&rarr;</kbd>: bottom-right ½, ⅔ and ⅓
+  - <kbd>Win</kbd> + <kbd>Ctrl</kbd> + <kbd>U</kbd>: top-left ½, ⅔ and ⅓
+  - <kbd>Win</kbd> + <kbd>Ctrl</kbd> + <kbd>I</kbd>: top-right ½, ⅔ and ⅓
+  - <kbd>Win</kbd> + <kbd>Ctrl</kbd> + <kbd>J</kbd>: bottom-left ½, ⅔ and ⅓
+  - <kbd>Win</kbd> + <kbd>Ctrl</kbd> + <kbd>K</kbd>: bottom-right ½, ⅔ and ⅓
 
 - **Center window** on the display: <kbd>Win</kbd>+<kbd>Alt</kbd>+<kbd>C</kbd>
 

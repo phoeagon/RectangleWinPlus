@@ -1,3 +1,5 @@
+github.com/ahmetb/RectangleWin v0.2.1 h1:rCxJ4LNlUT0mXe9YTOc+eNAJZLLOv6nXRE+7t6ME1zE=
+github.com/ahmetb/RectangleWin v0.2.1/go.mod h1:qwytNXauiDyXhFTfnRjh9KpTXZL9qQ3GVCN+AwTN5Lk=
 github.com/apenwarr/fixconsole v0.0.0-20191012055117-5a9f6489cc29 h1:muXWUcay7DDy1/hEQWrYlBy+g0EuwT70sBHg65SeUc4=
 github.com/apenwarr/fixconsole v0.0.0-20191012055117-5a9f6489cc29/go.mod h1:JYWahgHer+Z2xbsgHPtaDYVWzeHDminu+YIBWkxpCAY=
 github.com/apenwarr/w32 v0.0.0-20190407065021-aa00fece76ab h1:CMGzRRCjnD50RjUFSArBLuCxiDvdp7b8YPAcikBEQ+k=

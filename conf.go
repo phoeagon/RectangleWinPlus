@@ -30,7 +30,7 @@ type KeyBinding struct {
 	// Automatically converted from Key.
 	// When this is set, it overrides Key.
 	KeyCode int32 `yaml: "key_code"`
-	// The feature in RectangleWin to bind to.
+	// The feature in RectangleWinPlus to bind to.
 	// Valid values:
 	//   moveToTop
 	//   moveToBottom
@@ -68,8 +68,8 @@ var DEFAULT_CONF = Configuration{
 //go:embed config.example.yaml
 var configExampleYaml []byte
 
-// Expected config path at %HOME%/.config/RectangleWin/config.yaml
-var DEFAULT_CONF_PATH_PREFIX = ".config/RectangleWin/"
+// Expected config path at %HOME%/.config/RectangleWinPlus/config.yaml
+var DEFAULT_CONF_PATH_PREFIX = ".config/RectangleWinPlus/"
 var DEFAULT_CONF_NAME = "config.yaml"
 
 func convertModifier(keyName string) (int32, error) {

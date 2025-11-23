@@ -1,8 +1,9 @@
-module github.com/ahmetb/RectangleWin
+module github.com/phoeagon/RectangleWinPlus
 
 go 1.17
 
 require (
+	github.com/ahmetb/RectangleWin v0.2.1
 	github.com/apenwarr/fixconsole v0.0.0-20191012055117-5a9f6489cc29
 	github.com/getlantern/systray v1.1.0
 	github.com/gonutz/w32/v2 v2.2.2
