@@ -83,7 +83,7 @@ func convertModifier(keyName string) (int32, error) {
 	case "win", "meta", "super":
 		return MOD_WIN, nil
 	default:
-		return 0, fmt.Errorf("invalid keyname: %s", keyName)
+		return 0, errors.New("invalid keyname")
 	}
 	return 0, errors.New("unreachable")
 }
@@ -111,9 +111,14 @@ func convertKeyCode(key string) (int32, error) {
 		return 189, nil
 	case "=":
 		return 187, nil
-	default:
-		return 0, fmt.Errorf("Unknown key %s", key)
 	}
+	for id, v := range keyNames {
+		lv := strings.ToLower(v)
+		if lv == k || lv == (k+" key") {
+			return int32(id), nil
+		}
+	}
+	return 0, errors.New("Unknown key")
 }
 
 func bitwiseOr(nums []int32) int32 {

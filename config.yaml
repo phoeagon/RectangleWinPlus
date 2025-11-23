@@ -66,3 +66,16 @@ keybindings:
       key: UP_ARROW
       bindfeature: makeFullHeight
 
+    - modifier:
+        - Ctrl
+        - Win
+        - Alt
+      key: LEFT_ARROW
+      bindfeature: previousDisplay
+
+    - modifier:
+        - Ctrl
+        - Win
+        - Alt
+      key: RIGHT_ARROW
+      bindfeature: nextDisplay

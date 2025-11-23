@@ -35,6 +35,9 @@ only using hotkeys:
 
 ## Keyboard Bindings
 
+Overall we try to align with the default Rectangle keybinding, except for the cycling behavior
+for corner and edge functions. (Using default keymap, not including the popular Win-Alt swap)
+
 - **Snap to edges** (left/right/top/bottom ½, ⅔, ⅓):
   - <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>&larr;</kbd><kbd>&rarr;</kbd><kbd>&uarr;</kbd><kbd>&darr;</kbd>
   - Press multiple times to alternate between ½, ⅔ and ⅓.
@@ -51,6 +54,13 @@ only using hotkeys:
   (Obsolete since Windows natively supports <kbd>Win</kbd>+<kbd>&uarr;</kbd>)
 
 - **Always On Top (toggle)**: <kbd>Win</kbd>+<kbd>Alt</kbd>+<kbd>A</kbd>
+
+= **Make Larger**: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>=</kbd>
+= **Make smaller**: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>-</kbd>
+
+= **Make full height**: <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>$uarr;</kbd>
+= **Next display**: <kbd>Ctrl</kbd>+<kbd>Win</kbd>+<kbd>Alt</kbd>+<kbd>$rarr;</kbd>
+= **Prev display**: <kbd>Ctrl</kbd>+<kbd>Win</kbd>+<kbd>Alt</kbd>+<kbd>$larr;</kbd>
 
 The following are also available if you use the attached `config.yaml`:
   - <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>&uarr;</kbd>: maximize window height.
