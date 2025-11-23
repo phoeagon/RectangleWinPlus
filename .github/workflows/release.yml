@@ -20,6 +20,8 @@ jobs:
 
     - name: Build
       run: | 
+        rm app.syso
+        windres app.rc -o app.syso
         go env -w GOOS=windows
         GOOS=windows go build -ldflags -H=windowsgui .
         mkdir build/
