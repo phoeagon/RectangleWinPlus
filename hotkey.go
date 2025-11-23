@@ -17,8 +17,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/ahmetb/RectangleWin/w32ex"
 	"github.com/gonutz/w32/v2"
+	"github.com/phoeagon/RectangleWinPlus/w32ex"
 )
 
 var (
@@ -66,6 +66,20 @@ func RegisterHotKey(h HotKey) bool {
 	return ok
 }
 
+func UnregisterHotKey(h HotKey) {
+	if hotkeyRegistrations[h.id] == nil {
+		fmt.Printf("warn: hotkey not registered: %v\n", h)
+		return
+	}
+	ok := w32ex.UnregisterHotKey(0, h.id)
+	if !ok {
+		fmt.Printf("warn: failed to unregister hotkey: %v\n", h)
+		// showMessageBox("Failed to unregister hotkey" + h.Describe())
+	} else {
+		delete(hotkeyRegistrations, h.id)
+	}
+}
+
 func msgLoop() error {
 	defer fmt.Println("event loop finished")
 	for {
@@ -89,5 +103,11 @@ func msgLoop() error {
 			w32.TranslateMessage(&m)
 			w32.DispatchMessage(&m)
 		}
+	}
+}
+
+func unregisterAllHotKeys() {
+	for _, h := range hotkeyRegistrations {
+		UnregisterHotKey(*h)
 	}
 }

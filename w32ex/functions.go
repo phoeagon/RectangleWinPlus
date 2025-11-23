@@ -34,6 +34,11 @@ func RegisterHotKey(hwnd w32.HWND, id, mod, vk int) bool {
 	return r1 != 0
 }
 
+func UnregisterHotKey(hwnd w32.HWND, id int) bool {
+	r1, _, _ := user32.NewProc("UnregisterHotKey").Call(uintptr(hwnd), uintptr(id))
+	return r1 != 0
+}
+
 func GetDpiForWindow(hwnd w32.HWND) int32 {
 	r1, _, _ := user32.NewProc("GetDpiForWindow").Call(uintptr(hwnd))
 	return int32(r1)
