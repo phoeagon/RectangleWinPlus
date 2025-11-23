@@ -50,10 +50,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y mingw-w64
 
-      # --- Remove any committed syso files ---
-      - name: Clean old .syso files
-        run: rm -f *.syso
-
       # --- Generate fresh .syso files for Windows cross builds ---
       - name: Generate Windows resources
         run: |
