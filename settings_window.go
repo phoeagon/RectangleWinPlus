@@ -208,93 +208,91 @@ func buildRowWidget(sw *SettingsWindowApp, r *HotkeyRow) Widget {
 }
 
 func startRecordingHotkey(sw *SettingsWindowApp, row *HotkeyRow) {
-	if sw.recording != nil {
-		if sw.handlerID != 0 {
-			sw.recording.Button.KeyDown().Detach(sw.handlerID)
-			sw.handlerID = 0
-		}
-		sw.recording.UpdateText() // Reset previous
-	}
 	sw.recording = row
-	row.Button.SetText("Press keys...")
 
-	sw.handlerID = row.Button.KeyDown().Attach(func(key walk.Key) {
-		if sw.recording == nil {
-			return
-		}
+	var dlg *walk.Dialog
+	var lineEdit *walk.LineEdit
 
-		// Get modifiers
-		mods := walk.ModifiersDown()
+	// Create a dialog with a LineEdit to capture keyboard input
+	if _, err := (Dialog{
+		AssignTo: &dlg,
+		Title:    "Record Hotkey - " + row.DisplayName,
+		MinSize:  Size{Width: 300, Height: 100},
+		Layout:   VBox{},
+		Children: []Widget{
+			Label{
+				Text: "Press your desired key combination...",
+			},
+			LineEdit{
+				AssignTo: &lineEdit,
+				ReadOnly: true,
+				Text:     "Waiting for input...",
+				OnKeyDown: func(key walk.Key) {
+					// Get modifiers
+					mods := walk.ModifiersDown()
 
-		// Map walk modifiers to our app's modifiers
-		var modifiers []string
-		var modCodes []int32
+					var modifiers []string
+					var modCodes []int32
 
-		if mods&walk.ModControl != 0 {
-			modifiers = append(modifiers, "Ctrl")
-			modCodes = append(modCodes, MOD_CONTROL)
-		}
-		if mods&walk.ModAlt != 0 {
-			modifiers = append(modifiers, "Alt")
-			modCodes = append(modCodes, MOD_ALT)
-		}
-		if mods&walk.ModShift != 0 {
-			modifiers = append(modifiers, "Shift")
-			modCodes = append(modCodes, MOD_SHIFT)
-		}
+					if mods&walk.ModControl != 0 {
+						modifiers = append(modifiers, "Ctrl")
+						modCodes = append(modCodes, MOD_CONTROL)
+					}
+					if mods&walk.ModAlt != 0 {
+						modifiers = append(modifiers, "Alt")
+						modCodes = append(modCodes, MOD_ALT)
+					}
+					if mods&walk.ModShift != 0 {
+						modifiers = append(modifiers, "Shift")
+						modCodes = append(modCodes, MOD_SHIFT)
+					}
 
-		// Map key
-		keyName := mapWalkKeyToName(key)
-		keyCode := int32(key)
+					// Map key
+					keyName := mapWalkKeyToName(key)
+					keyCode := int32(key)
 
-		// Ignore modifier-only presses
-		if isModifierKey(key) {
-			return
-		}
+					// Ignore modifier-only presses
+					if isModifierKey(key) {
+						return
+					}
 
-		// Create temporary binding for validation
-		tempBinding := KeyBinding{
-			Key:          keyName,
-			KeyCode:      keyCode,
-			Modifier:     modifiers,
-			ModifierCode: modCodes,
-			CombinedMod:  bitwiseOr(modCodes),
-		}
+					// Create temporary binding for validation
+					tempBinding := KeyBinding{
+						Key:          keyName,
+						KeyCode:      keyCode,
+						Modifier:     modifiers,
+						ModifierCode: modCodes,
+						CombinedMod:  bitwiseOr(modCodes),
+					}
 
-		// Check for duplicate hotkey
-		if conflictRow := findHotkeyConflict(sw, sw.recording, tempBinding); conflictRow != nil {
-			// Show error message
-			errorMsg := fmt.Sprintf("This hotkey is already assigned to '%s'.\n\nPlease choose a different key combination.", conflictRow.DisplayName)
-			walk.MsgBox(sw.MainWindow, "Duplicate Hotkey", errorMsg, walk.MsgBoxIconWarning)
+					// Check for duplicate hotkey
+					if conflictRow := findHotkeyConflict(sw, sw.recording, tempBinding); conflictRow != nil {
+						errorMsg := fmt.Sprintf("This hotkey is already assigned to '%s'.\\n\\nPlease choose a different key combination.", conflictRow.DisplayName)
+						walk.MsgBox(dlg, "Duplicate Hotkey", errorMsg, walk.MsgBoxIconWarning)
+						return
+					}
 
-			// Reset the button text
-			sw.recording.UpdateText()
+					// Update binding
+					sw.recording.Binding.Key = keyName
+					sw.recording.Binding.KeyCode = keyCode
+					sw.recording.Binding.Modifier = modifiers
+					sw.recording.Binding.ModifierCode = modCodes
+					sw.recording.Binding.CombinedMod = bitwiseOr(modCodes)
 
-			// Detach and cleanup
-			if sw.handlerID != 0 {
-				sw.recording.Button.KeyDown().Detach(sw.handlerID)
-				sw.handlerID = 0
-			}
-			sw.recording = nil
-			return
-		}
+					// Update the row's button text
+					sw.recording.UpdateText()
 
-		// Update binding
-		sw.recording.Binding.Key = keyName
-		sw.recording.Binding.KeyCode = keyCode
-		sw.recording.Binding.Modifier = modifiers
-		sw.recording.Binding.ModifierCode = modCodes
-		sw.recording.Binding.CombinedMod = bitwiseOr(modCodes)
-
-		sw.recording.UpdateText()
-
-		// Detach and cleanup
-		if sw.handlerID != 0 {
-			sw.recording.Button.KeyDown().Detach(sw.handlerID)
-			sw.handlerID = 0
-		}
+					// Close the dialog
+					dlg.Accept()
+					sw.recording = nil
+				},
+			},
+		},
+	}).Run(sw.MainWindow); err != nil {
+		fmt.Printf("Failed to create recording dialog: %v\n", err)
 		sw.recording = nil
-	})
+		return
+	}
 }
 
 func isModifierKey(key walk.Key) bool {
