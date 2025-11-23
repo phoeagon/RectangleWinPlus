@@ -56,9 +56,7 @@ func onReady() {
 	updates := systray.AddMenuItem("Check updates", "")
 	go func() {
 		for range updates.ClickedCh {
-			if err := w32.ShellExecute(0, "open", releases, "", "", w32.SW_SHOWNORMAL); err != nil {
-				fmt.Printf("failed to launch browser: (%d), %v\n", w32.GetLastError(), err)
-			}
+			checkForUpdates()
 		}
 	}()
 
