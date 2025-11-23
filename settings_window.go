@@ -90,7 +90,7 @@ func runSettingsWindow() {
 	if _, err := (MainWindow{
 		AssignTo: &sw.MainWindow,
 		Title:    "RectangleWin Plus Settings",
-		MinSize:  Size{Width: 700, Height: 600},
+		MinSize:  Size{Width: 900, Height: 600},
 		Layout:   VBox{},
 		Children: []Widget{
 			Label{
@@ -135,43 +135,76 @@ func runSettingsWindow() {
 }
 
 func buildSettingsRows(sw *SettingsWindowApp) []Widget {
-	var widgets []Widget
-	for _, row := range sw.rows {
+	// Split rows into two columns
+	midpoint := (len(sw.rows) + 1) / 2
+	leftRows := sw.rows[:midpoint]
+	rightRows := sw.rows[midpoint:]
+
+	// Build left column widgets
+	var leftWidgets []Widget
+	for _, row := range leftRows {
 		r := row // capture loop variable
-		widgets = append(widgets, Composite{
-			Layout: HBox{},
+		leftWidgets = append(leftWidgets, buildRowWidget(sw, r))
+	}
+
+	// Build right column widgets
+	var rightWidgets []Widget
+	for _, row := range rightRows {
+		r := row // capture loop variable
+		rightWidgets = append(rightWidgets, buildRowWidget(sw, r))
+	}
+
+	// Return a two-column layout
+	return []Widget{
+		Composite{
+			Layout: HBox{Spacing: 20},
 			Children: []Widget{
-				Label{
-					AssignTo: &r.Label,
-					Text:     r.DisplayName,
-					MinSize:  Size{Width: 200, Height: 0},
+				Composite{
+					Layout:   VBox{Spacing: 5},
+					Children: leftWidgets,
 				},
-				HSpacer{},
-				PushButton{
-					AssignTo: &r.Button,
-					Text:     formatHotkey(r.Binding),
-					MinSize:  Size{Width: 200, Height: 0},
-					OnClicked: func() {
-						startRecordingHotkey(sw, r)
-					},
-				},
-				PushButton{
-					AssignTo: &r.ClearBtn,
-					Text:     "Clear",
-					MaxSize:  Size{Width: 60, Height: 0},
-					OnClicked: func() {
-						r.Binding.Key = ""
-						r.Binding.KeyCode = 0
-						r.Binding.Modifier = nil
-						r.Binding.ModifierCode = nil
-						r.Binding.CombinedMod = 0
-						r.UpdateText()
-					},
+				Composite{
+					Layout:   VBox{Spacing: 5},
+					Children: rightWidgets,
 				},
 			},
-		})
+		},
 	}
-	return widgets
+}
+
+func buildRowWidget(sw *SettingsWindowApp, r *HotkeyRow) Widget {
+	return Composite{
+		Layout: HBox{},
+		Children: []Widget{
+			Label{
+				AssignTo: &r.Label,
+				Text:     r.DisplayName,
+				MinSize:  Size{Width: 150, Height: 0},
+			},
+			HSpacer{},
+			PushButton{
+				AssignTo: &r.Button,
+				Text:     formatHotkey(r.Binding),
+				MinSize:  Size{Width: 150, Height: 0},
+				OnClicked: func() {
+					startRecordingHotkey(sw, r)
+				},
+			},
+			PushButton{
+				AssignTo: &r.ClearBtn,
+				Text:     "×",
+				MaxSize:  Size{Width: 30, Height: 0},
+				OnClicked: func() {
+					r.Binding.Key = ""
+					r.Binding.KeyCode = 0
+					r.Binding.Modifier = nil
+					r.Binding.ModifierCode = nil
+					r.Binding.CombinedMod = 0
+					r.UpdateText()
+				},
+			},
+		},
+	}
 }
 
 func startRecordingHotkey(sw *SettingsWindowApp, row *HotkeyRow) {
