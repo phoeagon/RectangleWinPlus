@@ -35,6 +35,33 @@ func pushLeft(disp, cur w32.RECT) w32.RECT {
 	}
 }
 
+func pushRight(disp, cur w32.RECT) w32.RECT {
+	return w32.RECT{
+		Left:   disp.Right - cur.Width(),
+		Top:    cur.Top,
+		Right:  disp.Right,
+		Bottom: cur.Top + cur.Height(),
+	}
+}
+
+func pushTop(disp, cur w32.RECT) w32.RECT {
+	return w32.RECT{
+		Left:   cur.Left,
+		Top:    disp.Top,
+		Right:  cur.Left + cur.Width(),
+		Bottom: disp.Top + cur.Height(),
+	}
+}
+
+func pushBottom(disp, cur w32.RECT) w32.RECT {
+	return w32.RECT{
+		Left:   cur.Left,
+		Top:    disp.Bottom - cur.Height(),
+		Right:  cur.Left + cur.Width(),
+		Bottom: disp.Bottom,
+	}
+}
+
 func toRight(d w32.RECT, mul, div int32) w32.RECT {
 	return w32.RECT{
 		Left:   d.Left + d.Width() - d.Width()*mul/div,

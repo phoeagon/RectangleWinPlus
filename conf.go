@@ -32,10 +32,13 @@ type KeyBinding struct {
 	// The feature in RectangleWin to bind to.
 	// Valid values:
 	//   moveToTop
+	//   pushToTop
 	//   moveToBottom
+	//   pushToBottom
 	//   moveToLeft
 	//   pushToLeft
 	//   moveToRight
+	//   pushToRight
 	//   moveToTopLeft
 	//   moveToTopRight
 	//   moveToBottomLeft

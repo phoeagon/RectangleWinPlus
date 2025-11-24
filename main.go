@@ -67,10 +67,13 @@ var featureDefinitions map[string]FeatureDefinition
 // Static map of feature display names for settings UI
 var featureDisplayNames = map[string]string{
 	"moveToTop":         "Top half",
+	"pushToTop":         "Push to Top",
 	"moveToBottom":      "Bottom half",
+	"pushToBottom":      "Push to Bottom",
 	"moveToLeft":        "Left half",
 	"pushToLeft":        "Push to Left",
 	"moveToRight":       "Right half",
+	"pushToRight":       "Push to Right",
 	"moveToTopLeft":     "Top-Left corner",
 	"moveToTopRight":    "Top-Right corner",
 	"moveToBottomLeft":  "Bottom-Left corner",
@@ -222,15 +225,30 @@ func main() {
 		DisplayName string
 		Callback    func()
 	}{
-		"moveToTop":    {"Top half", func() { cycleEdgeFuncs(2) }},
+		"moveToTop": {"Top half", func() { cycleEdgeFuncs(2) }},
+		"pushToTop": {"Push to Top", func() {
+			if _, err := resize(getTargetWindow(), pushTop); err != nil {
+				fmt.Printf("warn: resize: %v\n", err)
+			}
+		}},
 		"moveToBottom": {"Bottom half", func() { cycleEdgeFuncs(3) }},
-		"moveToLeft":   {"Left half", func() { cycleEdgeFuncs(0) }},
+		"pushToBottom": {"Push to Bottom", func() {
+			if _, err := resize(getTargetWindow(), pushBottom); err != nil {
+				fmt.Printf("warn: resize: %v\n", err)
+			}
+		}},
+		"moveToLeft": {"Left half", func() { cycleEdgeFuncs(0) }},
 		"pushToLeft": {"Push to Left", func() {
 			if _, err := resize(getTargetWindow(), pushLeft); err != nil {
 				fmt.Printf("warn: resize: %v\n", err)
 			}
 		}},
-		"moveToRight":       {"Right half", func() { cycleEdgeFuncs(1) }},
+		"moveToRight": {"Right half", func() { cycleEdgeFuncs(1) }},
+		"pushToRight": {"Push to Right", func() {
+			if _, err := resize(getTargetWindow(), pushRight); err != nil {
+				fmt.Printf("warn: resize: %v\n", err)
+			}
+		}},
 		"moveToTopLeft":     {"Top-Left corner", func() { cycleCornerFuncs(0) }},
 		"moveToTopRight":    {"Top-Right corner", func() { cycleCornerFuncs(1) }},
 		"moveToBottomLeft":  {"Bottom-Left corner", func() { cycleCornerFuncs(2) }},
@@ -331,15 +349,16 @@ func main() {
 			hks = append(hks, hk)
 		}
 	}
-
 	// Populate global features list with hotkey info
 	// Order matters for the menu
 	orderedKeys := []string{
 		"leftHalf", "rightHalf", "topHalf", "bottomHalf", // These are not directly in map, they are part of cycle
-		"moveToLeft", "pushToLeft", "moveToRight", "moveToTop", "moveToBottom",
+		"moveToLeft", "moveToRight", "moveToTop", "moveToBottom",
 		"moveToTopLeft", "moveToTopRight", "moveToBottomLeft", "moveToBottomRight",
 		"moveToCenter", "maximize", "almostMaximize", "makeLarger", "makeSmaller", "makeFullHeight",
 		"nextDisplay", "prevDisplay", "toggleAlwaysOnTop",
+		// pushTo series happen last, because they are less used, as aligned in Rectangle.
+		"pushToLeft", "pushToRight", "pushToTop", "pushToBottom",
 	}
 
 	for _, key := range orderedKeys {

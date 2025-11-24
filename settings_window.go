@@ -74,6 +74,7 @@ func runSettingsWindow() {
 		"moveToTopLeft", "moveToTopRight", "moveToBottomLeft", "moveToBottomRight",
 		"moveToCenter", "maximize", "almostMaximize", "makeLarger", "makeSmaller", "makeFullHeight",
 		"nextDisplay", "prevDisplay", "toggleAlwaysOnTop",
+		"pushToLeft", "pushToRight", "pushToTop", "pushToBottom",
 	}
 
 	// Build rows
