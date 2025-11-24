@@ -578,9 +578,11 @@ func convertToRawURL(url string) string {
 }
 
 // importConfigFromURL allows the user to import configuration from a web URL
+// importConfigFromURL allows the user to import configuration from a web URL
 func importConfigFromURL(sw *SettingsWindowApp) {
 	var dlg *walk.Dialog
 	var urlEdit *walk.LineEdit
+	var url string
 
 	// Create URL input dialog
 	if _, err := (Dialog{
@@ -606,6 +608,7 @@ func importConfigFromURL(sw *SettingsWindowApp) {
 					PushButton{
 						Text: "Import",
 						OnClicked: func() {
+							url = urlEdit.Text()
 							dlg.Accept()
 						},
 					},
@@ -623,57 +626,113 @@ func importConfigFromURL(sw *SettingsWindowApp) {
 		return
 	}
 
-	// Get the URL from the input
-	url := strings.TrimSpace(urlEdit.Text())
+	// Clean up the URL
+	url = strings.TrimSpace(url)
 	if url == "" {
 		return // User cancelled or entered empty URL
 	}
 
 	// Convert to raw URL if needed
 	rawURL := convertToRawURL(url)
-	fmt.Printf("Downloading config from: %s\n", rawURL)
+	if *debug {
+		fmt.Printf("Original URL: %s\n", url)
+		fmt.Printf("Downloading config from: %s\n", rawURL)
+	}
 
 	// Download the file
 	resp, err := http.Get(rawURL)
 	if err != nil {
-		walk.MsgBox(sw, "Error", fmt.Sprintf("Failed to download from URL:\n%v", err), walk.MsgBoxIconError)
+		walk.MsgBox(sw, "Import Failed", fmt.Sprintf("Failed to download from URL:\n%v\n\nURL: %s", err, rawURL), walk.MsgBoxIconError)
 		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		walk.MsgBox(sw, "Error", fmt.Sprintf("Failed to download config.\nHTTP Status: %d %s\n\nPlease check the URL and try again.", resp.StatusCode, resp.Status), walk.MsgBoxIconError)
+		walk.MsgBox(sw, "Import Failed", fmt.Sprintf("Failed to download config.\nHTTP Status: %d %s\n\nURL: %s\n\nPlease check the URL and try again.", resp.StatusCode, resp.Status, rawURL), walk.MsgBoxIconError)
 		return
 	}
 
 	// Read the response body
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		walk.MsgBox(sw, "Error", fmt.Sprintf("Failed to read downloaded content:\n%v", err), walk.MsgBoxIconError)
+		walk.MsgBox(sw, "Import Failed", fmt.Sprintf("Failed to read downloaded content:\n%v", err), walk.MsgBoxIconError)
 		return
 	}
 
 	// Validate YAML format
 	var testConfig Configuration
 	if err := yaml.Unmarshal(data, &testConfig); err != nil {
-		walk.MsgBox(sw, "Error", fmt.Sprintf("Invalid configuration file (not valid YAML):\n%v", err), walk.MsgBoxIconError)
+		walk.MsgBox(sw, "Import Failed", fmt.Sprintf("Invalid configuration file (not valid YAML):\n%v\n\nPlease check the file format.", err), walk.MsgBoxIconError)
+		return
+	}
+
+	// Show preview dialog with the downloaded content
+	var previewDlg *walk.Dialog
+	var textEdit *walk.TextEdit
+	var accepted bool
+
+	if _, err := (Dialog{
+		AssignTo: &previewDlg,
+		Title:    "Preview Configuration",
+		MinSize:  Size{Width: 600, Height: 400},
+		Layout:   VBox{},
+		Children: []Widget{
+			Label{
+				Text: fmt.Sprintf("Downloaded from: %s\n\nPreview the configuration below and click 'Import' to proceed:", rawURL),
+			},
+			TextEdit{
+				AssignTo: &textEdit,
+				ReadOnly: true,
+				VScroll:  true,
+				Text:     string(data),
+			},
+			Composite{
+				Layout: HBox{},
+				Children: []Widget{
+					HSpacer{},
+					PushButton{
+						Text: "Import",
+						OnClicked: func() {
+							accepted = true
+							previewDlg.Accept()
+						},
+					},
+					PushButton{
+						Text: "Cancel",
+						OnClicked: func() {
+							accepted = false
+							previewDlg.Cancel()
+						},
+					},
+				},
+			},
+		},
+	}).Run(sw); err != nil {
+		walk.MsgBox(sw, "Error", fmt.Sprintf("Failed to show preview dialog: %v", err), walk.MsgBoxIconError)
+		return
+	}
+
+	// If user cancelled the preview, don't import
+	if !accepted {
+		walk.MsgBox(sw, "Import Cancelled", "Configuration import was cancelled.", walk.MsgBoxIconInformation)
 		return
 	}
 
 	// Get config path
 	configPath, err := getValidConfigPathOrCreate()
 	if err != nil {
-		walk.MsgBox(sw, "Error", fmt.Sprintf("Failed to get config path: %v", err), walk.MsgBoxIconError)
+		walk.MsgBox(sw, "Import Failed", fmt.Sprintf("Failed to get config path: %v", err), walk.MsgBoxIconError)
 		return
 	}
 
 	// Write to config location
 	if err := os.WriteFile(configPath, data, 0644); err != nil {
-		walk.MsgBox(sw, "Error", fmt.Sprintf("Failed to import config: %v", err), walk.MsgBoxIconError)
+		walk.MsgBox(sw, "Import Failed", fmt.Sprintf("Failed to write config file: %v", err), walk.MsgBoxIconError)
 		return
 	}
 
-	walk.MsgBox(sw, "Success", "Configuration imported successfully from URL!\n\nPlease restart RectangleWin Plus to apply the changes.", walk.MsgBoxIconInformation)
+	// Success message
+	walk.MsgBox(sw, "Import Successful", "Configuration imported successfully from URL!\n\nThe settings window will now close and RectangleWin Plus will restart to apply the changes.", walk.MsgBoxIconInformation)
 
 	// Close settings window and restart main app
 	sw.Close()
