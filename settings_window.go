@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
@@ -21,6 +23,9 @@ func restartMainApp() {
 
 	// Launch the main app without the --settings-window flag
 	cmd := exec.Command(exe)
+	if *debug {
+		cmd = exec.Command(exe, "--debug")
+	}
 	if err := cmd.Start(); err != nil {
 		fmt.Printf("Failed to restart main app: %v\n", err)
 		walk.MsgBox(nil, "Error", fmt.Sprintf("Failed to restart application: %v", err), walk.MsgBoxIconError)
@@ -94,6 +99,36 @@ func runSettingsWindow() {
 		MinSize:  Size{Width: 900, Height: 600},
 		Layout:   VBox{},
 		Children: []Widget{
+			Composite{
+				Layout: HBox{},
+				Children: []Widget{
+					PushButton{
+						Text: "Export Config...",
+						OnClicked: func() {
+							exportConfig(sw)
+						},
+					},
+					PushButton{
+						Text: "Import Config...",
+						OnClicked: func() {
+							importConfig(sw)
+						},
+					},
+					PushButton{
+						Text: "Edit Config in Text Editor",
+						OnClicked: func() {
+							openConfigInEditor(sw)
+						},
+					},
+					PushButton{
+						Text: "Import from URL...",
+						OnClicked: func() {
+							importConfigFromURL(sw)
+						},
+					},
+					HSpacer{},
+				},
+			},
 			Label{
 				Text: "Keyboard Shortcuts",
 				Font: Font{PointSize: 12, Bold: true},
@@ -412,4 +447,234 @@ func mapWalkKeyToName(key walk.Key) string {
 		return s
 	}
 	return strings.ReplaceAll(keyNames[int(key)], " key", "")
+}
+
+// exportConfig allows the user to save the current configuration to a file
+func exportConfig(sw *SettingsWindowApp) {
+	dlg := new(walk.FileDialog)
+	dlg.Title = "Export Configuration"
+	dlg.Filter = "YAML Files (*.yaml)|*.yaml|All Files (*.*)|*.*"
+
+	if ok, err := dlg.ShowSave(sw); err != nil {
+		walk.MsgBox(sw, "Error", fmt.Sprintf("Failed to show save dialog: %v", err), walk.MsgBoxIconError)
+		return
+	} else if !ok {
+		return // User cancelled
+	}
+
+	// Get current config path
+	configPath, err := getValidConfigPathOrCreate()
+	if err != nil {
+		walk.MsgBox(sw, "Error", fmt.Sprintf("Failed to get config path: %v", err), walk.MsgBoxIconError)
+		return
+	}
+
+	// Read current config
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		walk.MsgBox(sw, "Error", fmt.Sprintf("Failed to read config file: %v", err), walk.MsgBoxIconError)
+		return
+	}
+
+	// Write to selected file
+	if err := os.WriteFile(dlg.FilePath, data, 0644); err != nil {
+		walk.MsgBox(sw, "Error", fmt.Sprintf("Failed to export config: %v", err), walk.MsgBoxIconError)
+		return
+	}
+
+	walk.MsgBox(sw, "Success", fmt.Sprintf("Configuration exported to:\n%s", dlg.FilePath), walk.MsgBoxIconInformation)
+}
+
+// importConfig allows the user to load a configuration from a file
+func importConfig(sw *SettingsWindowApp) {
+	dlg := new(walk.FileDialog)
+	dlg.Title = "Import Configuration"
+	dlg.Filter = "YAML Files (*.yaml)|*.yaml|All Files (*.*)|*.*"
+
+	if ok, err := dlg.ShowOpen(sw); err != nil {
+		walk.MsgBox(sw, "Error", fmt.Sprintf("Failed to show open dialog: %v", err), walk.MsgBoxIconError)
+		return
+	} else if !ok {
+		return // User cancelled
+	}
+
+	// Read selected file
+	data, err := os.ReadFile(dlg.FilePath)
+	if err != nil {
+		walk.MsgBox(sw, "Error", fmt.Sprintf("Failed to read file: %v", err), walk.MsgBoxIconError)
+		return
+	}
+
+	// Validate YAML format
+	var testConfig Configuration
+	if err := yaml.Unmarshal(data, &testConfig); err != nil {
+		walk.MsgBox(sw, "Error", fmt.Sprintf("Invalid configuration file:\n%v", err), walk.MsgBoxIconError)
+		return
+	}
+
+	// Get config path
+	configPath, err := getValidConfigPathOrCreate()
+	if err != nil {
+		walk.MsgBox(sw, "Error", fmt.Sprintf("Failed to get config path: %v", err), walk.MsgBoxIconError)
+		return
+	}
+
+	// Write to config location
+	if err := os.WriteFile(configPath, data, 0644); err != nil {
+		walk.MsgBox(sw, "Error", fmt.Sprintf("Failed to import config: %v", err), walk.MsgBoxIconError)
+		return
+	}
+
+	walk.MsgBox(sw, "Success", "Configuration imported successfully!\n\nPlease restart RectangleWin Plus to apply the changes.", walk.MsgBoxIconInformation)
+
+	// Close settings window and restart main app
+	sw.Close()
+}
+
+// openConfigInEditor opens the configuration file in notepad
+func openConfigInEditor(sw *SettingsWindowApp) {
+	configFilePath, err := getValidConfigPathOrCreate()
+	if err != nil {
+		walk.MsgBox(sw, "Error", fmt.Sprintf("Can't locate config path:\n%v", err), walk.MsgBoxIconError)
+		return
+	}
+
+	cmd := exec.Command("notepad.exe", configFilePath)
+	if err := cmd.Start(); err != nil {
+		walk.MsgBox(sw, "Error", fmt.Sprintf("Failed to open config file in notepad:\n%v", err), walk.MsgBoxIconError)
+		return
+	}
+
+	walk.MsgBox(sw, "Info", "Config file opened in Notepad.\n\nAfter making changes, save the file and restart RectangleWin Plus to apply them.", walk.MsgBoxIconInformation)
+}
+
+// convertToRawURL converts various URL formats to their raw content equivalents
+func convertToRawURL(url string) string {
+	// GitHub file URLs: github.com/user/repo/blob/branch/file -> raw.githubusercontent.com/user/repo/branch/file
+	if strings.Contains(url, "github.com") && strings.Contains(url, "/blob/") {
+		url = strings.Replace(url, "github.com", "raw.githubusercontent.com", 1)
+		url = strings.Replace(url, "/blob/", "/", 1)
+		return url
+	}
+
+	// GitHub Gist URLs: gist.github.com/user/gist_id -> gist.githubusercontent.com/user/gist_id/raw
+	if strings.Contains(url, "gist.github.com") && !strings.Contains(url, "raw") {
+		url = strings.Replace(url, "gist.github.com", "gist.githubusercontent.com", 1)
+		// Remove trailing slash if present
+		url = strings.TrimSuffix(url, "/")
+		// Add /raw to get the raw content
+		url = url + "/raw"
+		return url
+	}
+
+	// Bitbucket URLs: bitbucket.org/user/repo/src/branch/file -> bitbucket.org/user/repo/raw/branch/file
+	if strings.Contains(url, "bitbucket.org") && strings.Contains(url, "/src/") {
+		url = strings.Replace(url, "/src/", "/raw/", 1)
+		return url
+	}
+
+	// Already raw or other URLs - return as-is
+	return url
+}
+
+// importConfigFromURL allows the user to import configuration from a web URL
+func importConfigFromURL(sw *SettingsWindowApp) {
+	var dlg *walk.Dialog
+	var urlEdit *walk.LineEdit
+
+	// Create URL input dialog
+	if _, err := (Dialog{
+		AssignTo: &dlg,
+		Title:    "Import Configuration from URL",
+		MinSize:  Size{Width: 500, Height: 150},
+		Layout:   VBox{},
+		Children: []Widget{
+			Label{
+				Text: "Enter the URL of the configuration file:",
+			},
+			Label{
+				Text:      "Supports: GitHub files, GitHub Gist, Bitbucket, and direct raw URLs",
+				TextColor: walk.RGB(100, 100, 100),
+			},
+			LineEdit{
+				AssignTo: &urlEdit,
+			},
+			Composite{
+				Layout: HBox{},
+				Children: []Widget{
+					HSpacer{},
+					PushButton{
+						Text: "Import",
+						OnClicked: func() {
+							dlg.Accept()
+						},
+					},
+					PushButton{
+						Text: "Cancel",
+						OnClicked: func() {
+							dlg.Cancel()
+						},
+					},
+				},
+			},
+		},
+	}).Run(sw); err != nil {
+		walk.MsgBox(sw, "Error", fmt.Sprintf("Failed to show URL dialog: %v", err), walk.MsgBoxIconError)
+		return
+	}
+
+	// Get the URL from the input
+	url := strings.TrimSpace(urlEdit.Text())
+	if url == "" {
+		return // User cancelled or entered empty URL
+	}
+
+	// Convert to raw URL if needed
+	rawURL := convertToRawURL(url)
+	fmt.Printf("Downloading config from: %s\n", rawURL)
+
+	// Download the file
+	resp, err := http.Get(rawURL)
+	if err != nil {
+		walk.MsgBox(sw, "Error", fmt.Sprintf("Failed to download from URL:\n%v", err), walk.MsgBoxIconError)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		walk.MsgBox(sw, "Error", fmt.Sprintf("Failed to download config.\nHTTP Status: %d %s\n\nPlease check the URL and try again.", resp.StatusCode, resp.Status), walk.MsgBoxIconError)
+		return
+	}
+
+	// Read the response body
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		walk.MsgBox(sw, "Error", fmt.Sprintf("Failed to read downloaded content:\n%v", err), walk.MsgBoxIconError)
+		return
+	}
+
+	// Validate YAML format
+	var testConfig Configuration
+	if err := yaml.Unmarshal(data, &testConfig); err != nil {
+		walk.MsgBox(sw, "Error", fmt.Sprintf("Invalid configuration file (not valid YAML):\n%v", err), walk.MsgBoxIconError)
+		return
+	}
+
+	// Get config path
+	configPath, err := getValidConfigPathOrCreate()
+	if err != nil {
+		walk.MsgBox(sw, "Error", fmt.Sprintf("Failed to get config path: %v", err), walk.MsgBoxIconError)
+		return
+	}
+
+	// Write to config location
+	if err := os.WriteFile(configPath, data, 0644); err != nil {
+		walk.MsgBox(sw, "Error", fmt.Sprintf("Failed to import config: %v", err), walk.MsgBoxIconError)
+		return
+	}
+
+	walk.MsgBox(sw, "Success", "Configuration imported successfully from URL!\n\nPlease restart RectangleWin Plus to apply the changes.", walk.MsgBoxIconInformation)
+
+	// Close settings window and restart main app
+	sw.Close()
 }

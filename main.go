@@ -38,6 +38,14 @@ var lastActiveWindow w32.HWND
 var hks []HotKey
 var shouldRestart bool
 
+// Command-line flags
+var debug *bool
+var killAll *bool
+var help *bool
+var action *string
+var loadTray *bool
+var settingsWindow *bool
+
 const currentVersion = "v1.0.2"
 
 type Feature struct {
@@ -90,12 +98,12 @@ func main() {
 		fmt.Fprintf(os.Stderr, "\nFor more information, visit: https://github.com/phoeagon/RectangleWinPlus\n")
 	}
 
-	debug := flag.Bool("debug", false, "enable debug mode (show console output)")
-	killAll := flag.Bool("killall", false, "kill all RectangleWinPlus instances and quit")
-	help := flag.Bool("help", false, "show this help message")
-	action := flag.String("action", "", "action to perform (moveToTop, moveToBottom, moveToLeft, moveToRight, moveToTopLeft, moveToTopRight, moveToBottomLeft, moveToBottomRight, maximize, almostMaximize, makeFullHeight, makeLarger, makeSmaller)")
-	loadTray := flag.Bool("load_tray", true, "load tray icon")
-	settingsWindow := flag.Bool("settings-window", false, "open settings window (internal use)")
+	debug = flag.Bool("debug", false, "enable debug mode (show console output)")
+	killAll = flag.Bool("killall", false, "kill all RectangleWinPlus instances and quit")
+	help = flag.Bool("help", false, "show this help message")
+	action = flag.String("action", "", "action to perform (moveToTop, moveToBottom, moveToLeft, moveToRight, moveToTopLeft, moveToTopRight, moveToBottomLeft, moveToBottomRight, maximize, almostMaximize, makeFullHeight, makeLarger, makeSmaller)")
+	loadTray = flag.Bool("load_tray", true, "load tray icon")
+	settingsWindow = flag.Bool("settings-window", false, "open settings window (internal use)")
 
 	if err := flag.CommandLine.Parse(os.Args[1:]); err != nil {
 		if err != flag.ErrHelp {

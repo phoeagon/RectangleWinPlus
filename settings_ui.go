@@ -18,11 +18,20 @@ func openSettingsUI() {
 	}
 
 	// Launch with a special flag to open settings window
-	cmd := exec.Command(exe, "--settings-window")
-	if err := cmd.Start(); err != nil {
-		fmt.Printf("Failed to launch settings window: %v\n", err)
-		showMessageBox(fmt.Sprintf("Failed to open settings: %v", err))
-		return
+	if *debug {
+		cmd := exec.Command(exe, "--settings-window", "--debug")
+		if err := cmd.Start(); err != nil {
+			fmt.Printf("Failed to launch settings window: %v\n", err)
+			showMessageBox(fmt.Sprintf("Failed to open settings: %v", err))
+			return
+		}
+	} else {
+		cmd := exec.Command(exe, "--settings-window")
+		if err := cmd.Start(); err != nil {
+			fmt.Printf("Failed to launch settings window: %v\n", err)
+			showMessageBox(fmt.Sprintf("Failed to open settings: %v", err))
+			return
+		}
 	}
 
 	// Exit the main application to release hotkeys
