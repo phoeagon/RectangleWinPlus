@@ -26,6 +26,15 @@ func toLeft(d w32.RECT, mul, div int32) w32.RECT {
 		Bottom: d.Top + d.Height()}
 }
 
+func pushLeft(disp, cur w32.RECT) w32.RECT {
+	return w32.RECT{
+		Left:   disp.Left,
+		Top:    cur.Top,
+		Right:  disp.Left + cur.Width(),
+		Bottom: cur.Top + cur.Height(),
+	}
+}
+
 func toRight(d w32.RECT, mul, div int32) w32.RECT {
 	return w32.RECT{
 		Left:   d.Left + d.Width() - d.Width()*mul/div,

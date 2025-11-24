@@ -69,6 +69,7 @@ var featureDisplayNames = map[string]string{
 	"moveToTop":         "Top half",
 	"moveToBottom":      "Bottom half",
 	"moveToLeft":        "Left half",
+	"pushToLeft":        "Push to Left",
 	"moveToRight":       "Right half",
 	"moveToTopLeft":     "Top-Left corner",
 	"moveToTopRight":    "Top-Right corner",
@@ -221,9 +222,14 @@ func main() {
 		DisplayName string
 		Callback    func()
 	}{
-		"moveToTop":         {"Top half", func() { cycleEdgeFuncs(2) }},
-		"moveToBottom":      {"Bottom half", func() { cycleEdgeFuncs(3) }},
-		"moveToLeft":        {"Left half", func() { cycleEdgeFuncs(0) }},
+		"moveToTop":    {"Top half", func() { cycleEdgeFuncs(2) }},
+		"moveToBottom": {"Bottom half", func() { cycleEdgeFuncs(3) }},
+		"moveToLeft":   {"Left half", func() { cycleEdgeFuncs(0) }},
+		"pushToLeft": {"Push to Left", func() {
+			if _, err := resize(getTargetWindow(), pushLeft); err != nil {
+				fmt.Printf("warn: resize: %v\n", err)
+			}
+		}},
 		"moveToRight":       {"Right half", func() { cycleEdgeFuncs(1) }},
 		"moveToTopLeft":     {"Top-Left corner", func() { cycleCornerFuncs(0) }},
 		"moveToTopRight":    {"Top-Right corner", func() { cycleCornerFuncs(1) }},
@@ -330,7 +336,7 @@ func main() {
 	// Order matters for the menu
 	orderedKeys := []string{
 		"leftHalf", "rightHalf", "topHalf", "bottomHalf", // These are not directly in map, they are part of cycle
-		"moveToLeft", "moveToRight", "moveToTop", "moveToBottom",
+		"moveToLeft", "pushToLeft", "moveToRight", "moveToTop", "moveToBottom",
 		"moveToTopLeft", "moveToTopRight", "moveToBottomLeft", "moveToBottomRight",
 		"moveToCenter", "maximize", "almostMaximize", "makeLarger", "makeSmaller", "makeFullHeight",
 		"nextDisplay", "prevDisplay", "toggleAlwaysOnTop",

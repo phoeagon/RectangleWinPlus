@@ -34,6 +34,7 @@ type KeyBinding struct {
 	//   moveToTop
 	//   moveToBottom
 	//   moveToLeft
+	//   pushToLeft
 	//   moveToRight
 	//   moveToTopLeft
 	//   moveToTopRight
