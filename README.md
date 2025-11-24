@@ -1,200 +1,106 @@
 # RectangleWin Plus
 
-## Origin
-
-This is a manual branch out of [phoeagon/RectangleWin](http://github.com/phoeagon/RectangleWin), which
-is a branch of [ahmetb/RectangleWin](http://github.com/ahmetb/RectangleWin).
-
-This is branched out from RectangleWin to introduce breaking changes and is not
-committed to remaining backward compatible with the original software.
-
-## Overview
-
-A minimalistic Windows rewrite of macOS
-[Rectangle.app](https://rectangleapp.com)/[Spectacle.app](https://www.spectacleapp.com/).
-([Why?](#why))
-
-A hotkey-oriented window snapping and resizing tool for Windows.
-
-This animation illustrates how RectangleWin helps me move windows to edges
-and corners (and cycle through half, one-thirds or two thirds width or height)
-only using hotkeys:
+**RectangleWin Plus** is a powerful window management utility for Windows, inspired by macOS's [Rectangle.app](https://rectangleapp.com) and [Spectacle.app](https://www.spectacleapp.com). It allows you to quickly snap windows to edges and corners, cycle through different sizes, and manage your workspace efficiently using customizable hotkeys.
 
 ![RectangleWin demo](./assets/RectangleWin-demo.gif)
 
-## Install
+## Features
 
-1. Go to [Releases](https://github.com/phoeagon/RectangleWinPlus/releases) and
-   download the suitable binary for your architecture (typically x64).
+-   **Window Snapping**: Snap windows to left/right/top/bottom halves, or to any of the four corners.
+-   **Size Cycling**: Repeatedly pressing the snap hotkey cycles the window size between 1/2, 2/3, and 1/3 of the screen.
+-   **Keyboard Centric**: Control everything with hotkeys. No mouse required.
+-   **Settings UI**: Easily view and configure hotkeys through a user-friendly interface.
+-   **URL Import**: Share and import hotkey configurations via URLs (e.g., Gist).
+-   **System Tray**: Quick access to features and settings from the system tray.
+-   **Multi-Monitor Support**: Move windows between displays with ease.
 
-2. Launch the `.exe` file. Now the program icon should be visible on system
-   tray!
+## Installation
 
-3. Click on the icon and mark as "Run on startup" to make sure you don't have
-   to run it every time you reboot your PC.
+1.  Go to the [Releases](https://github.com/phoeagon/RectangleWinPlus/releases) page.
+2.  Download the latest binary (typically `RectangleWinPlus.exe`) for your architecture.
+3.  Run the executable. The application will start and minimize to the system tray.
+4.  (Optional) Right-click the tray icon and select "Run on startup" to have it launch automatically.
 
-## Keyboard Bindings
+## Usage
 
-Overall we try to align with the default Rectangle keybinding, except for the cycling behavior
-for corner and edge functions. (Using default keymap, not including the popular Win-Alt swap)
+### Default Hotkeys
 
-- **Snap to edges** (left/right/top/bottom ½, ⅔, ⅓):
-  - <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>&larr;</kbd><kbd>&rarr;</kbd><kbd>&uarr;</kbd><kbd>&darr;</kbd>
-  - Press multiple times to alternate between ½, ⅔ and ⅓.
+RectangleWin Plus comes with a set of intuitive default hotkeys. You can customize these at any time via the Settings UI.
 
-- **Corner snapping**
-  - <kbd>Win</kbd> + <kbd>Ctrl</kbd> + <kbd>U</kbd>: top-left ½, ⅔ and ⅓
-  - <kbd>Win</kbd> + <kbd>Ctrl</kbd> + <kbd>I</kbd>: top-right ½, ⅔ and ⅓
-  - <kbd>Win</kbd> + <kbd>Ctrl</kbd> + <kbd>J</kbd>: bottom-left ½, ⅔ and ⅓
-  - <kbd>Win</kbd> + <kbd>Ctrl</kbd> + <kbd>K</kbd>: bottom-right ½, ⅔ and ⅓
+| Action | Hotkey | Description |
+| :--- | :--- | :--- |
+| **Snap Left** | `Ctrl` + `Alt` + `←` | Snap to left half. Press again to cycle (2/3, 1/3). |
+| **Snap Right** | `Ctrl` + `Alt` + `→` | Snap to right half. Press again to cycle (2/3, 1/3). |
+| **Snap Top** | `Ctrl` + `Alt` + `↑` | Snap to top half. Press again to cycle (2/3, 1/3). |
+| **Snap Bottom** | `Ctrl` + `Alt` + `↓` | Snap to bottom half. Press again to cycle (2/3, 1/3). |
+| **Top-Left** | `Win` + `Ctrl` + `U` | Snap to top-left corner. |
+| **Top-Right** | `Win` + `Ctrl` + `I` | Snap to top-right corner. |
+| **Bottom-Left** | `Win` + `Ctrl` + `J` | Snap to bottom-left corner. |
+| **Bottom-Right** | `Win` + `Ctrl` + `K` | Snap to bottom-right corner. |
+| **Maximize** | `Ctrl` + `Alt` + `Enter` | Maximize the window. |
+| **Center** | `Win` + `Alt` + `C` | Center the window on screen. |
+| **Next Display** | `Ctrl` + `Win` + `Alt` + `→` | Move window to next display. |
+| **Prev Display** | `Ctrl` + `Win` + `Alt` + `←` | Move window to previous display. |
 
-- **Center window** on the display: <kbd>Win</kbd>+<kbd>Alt</kbd>+<kbd>C</kbd>
+### Settings UI
 
-- **Maximize window**: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Enter</kbd>
+To configure hotkeys:
+1.  Right-click the system tray icon.
+2.  Select **Settings**.
+3.  In the Settings window, you can view current bindings.
+4.  Click on a binding to record a new hotkey.
 
-- **Always On Top (toggle)**: <kbd>Win</kbd>+<kbd>Alt</kbd>+<kbd>A</kbd>
+![Settings UI](./assets/settings.png)
 
-- **Make Larger**: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>=</kbd>
-- **Make smaller**: <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>-</kbd>
+### URL Import
 
-- **Make full height**: <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>&uarr;</kbd>
-- **Next display**: <kbd>Ctrl</kbd>+<kbd>Win</kbd>+<kbd>Alt</kbd>+<kbd>&rarr;</kbd>
-- **Prev display**: <kbd>Ctrl</kbd>+<kbd>Win</kbd>+<kbd>Alt</kbd>+<kbd>&larr;</kbd>
+You can import configurations from a URL (e.g., a raw GitHub Gist).
+1.  Open Settings.
+2.  Click **Import from URL**.
+3.  Paste the URL containing your `config.yaml` content.
 
-The following are also available if you use the attached `config.yaml`:
-  - <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>&uarr;</kbd>: maximize window height.
+## Advanced Configuration
 
-Context menu shows the current config and bound hotkeys. Alternatively you can also click on items on the menu to perform an operation.
-![context menu](./assets/menu.png)
+Power users can manually edit the configuration file located at `%HOME%/.config/RectangleWin/config.yaml`.
 
-## Why?
+The file uses a simple YAML structure:
 
-It seems that no window snapping utility for Windows is capable of letting
-user snap windows to edges or corners in {half, two-thirds, one-third} sizes
-using configurable **shortcut keys**, and center windows in a screen like
-Rectangle.app does, so I wrote this small utility for myself.
-
-I've tried the native Windows shortcuts and PowerToys FancyZones and they
-are not supporting corners, alternating between half and one/two thirds, and
-are not offering enough hotkey support.
-
-## Roadmap
-
-- Configurable shortcuts: I don't need these and it will likely require a pop-up
-  UI, so I will probably not get to this.
-
-## Configuration
-
-Configuration could be achieved by changing %HOME%/.config/RectangleWin/config.yaml in the same folder.
-
-This file has the following structure:
-
-```
+```yaml
 keybindings:
-    - modifier:
-        - Ctrl
-        - Alt
-      key: UP_ARROW
-      bindfeature: moveToTop
-      
-    - modifier:
-        - Ctrl
-        - Alt
-      key: DOWN_ARROW
-      bindfeature: moveToBottom
-      
+  - modifier:
+      - Ctrl
+      - Alt
+    key: UP_ARROW
+    bindfeature: moveToTop
 ```
 
-Each element of `keybindings` define a feature to bind keys.
-Here are some valid `modifier`s:
+See `conf.go` in the source code for a full list of valid keys and features.
 
-+  Ctrl
-+  Alt
-+  Shift
-+  Win
+## Command Line Arguments
 
-Here are some valid `key`:
+RectangleWin Plus supports several command-line flags:
 
-```
-/* case insensitive*/
-a
-b
-...
-c 
+-   `--debug`: Enable debug mode (attaches console output).
+-   `--killall`: Kill all running instances of the application.
+-   `--version`: Show version information.
+-   `--helpfull`: Show detailed help message with all available actions.
+-   `--action=<action>`: Perform a specific action immediately (e.g., `--action=moveToLeft`).
 
-0
-...
-9
+## Development
 
-UP_ARROW
-DOWN_ARROW
-LEFT_ARROW
-RIGHT_ARROW
-
-+
-"-" // This one has to be escaped
-```
-
-Here are some valid `bindfeature`s:
-
-```
-//   moveToTop
-//   moveToBottom
-//   moveToLeft
-//   moveToRight
-//   moveToTopLeft
-//   moveToTopRight
-//   moveToBottomLeft
-//   moveToBottomRight
-//   makeSmaller
-//   makeLarger
-//   makeFullHeight
-//   maximize
-//   almostMaximize
-//   moveToCenter
-//   toggleAlwaysOnTop
-//   nextDisplay
-//   prevDisplay
-```
-
-See `conf.go` for more details.
-
-The `config.example.yaml` contains an example. In addition, this YAML makes the following hotkey assignments
-available:
-  - <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>&larr;</kbd>: snap to left half
-  - <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>&rarr;</kbd>: snap to right half
-  - <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>&uarr;</kbd>: snap to upper half
-  - <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>&darr;</kbd>: snap to bottom half
-
-  - <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>U</kbd>: top-left ½, ⅔ and ⅓
-  - <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>I</kbd>: top-right ½, ⅔ and ⅓
-  - <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>J</kbd>: bottom-left ½, ⅔ and ⅓
-  - <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>K</kbd>: bottom-right ½, ⅔ and ⅓
-
-## Commandline
-
-The following commandline flags are available:
-
-- `--killall`: kill all running instances of RectangleWinPlus.exe
-- `--debug`: enable debug mode: attaches stderr/stdout to console
-- `--version`: shows version information. When run in GUI mode, a message box will be shown. If `--debug` is specified, the version information will be printed to console and no dialog box will be shown.
-- `--helpfull`: shows detailed help message. This also prints out details about each action.
-- `--action=<action>`: perform the specified action. `action` can be any of the `bindfeature`s in the config file, such as `moveToTop`, `moveToBottom`, `moveToLeft`, `moveToRight`, `moveToTopLeft`, `moveToTopRight`, `moveToBottomLeft`, `moveToBottomRight`, `makeSmaller`, `makeLarger`, `makeFullHeight`, `maximize`, `almostMaximize`, `moveToCenter`, `toggleAlwaysOnTop`, `nextDisplay`, `prevDisplay`.
-
-## Development (Install from source)
-
-With Go 1.17+ installed, clone this repository and run:
+To build from source (requires Go 1.17+):
 
 ```sh
+git clone https://github.com/phoeagon/RectangleWinPlus.git
+cd RectangleWinPlus
 go generate
 GOOS=windows go build -ldflags -H=windowsgui .
 ```
 
-The `RectangleWin.exe` will be available in the same directory.
+## Origin & Credits
+
+This project is a fork of [phoeagon/RectangleWin](http://github.com/phoeagon/RectangleWin), which is a fork of [ahmetb/RectangleWin](http://github.com/ahmetb/RectangleWin). It introduces breaking changes and new features like the Settings UI and URL Import.
 
 ## License
 
-This project is distributed as-is under the Apache 2.0 license.
-See [LICENSE](./LICENSE).
-
-If you see bugs, please open issues. I can't promise any fixes.
+Distributed under the Apache 2.0 License. See [LICENSE](./LICENSE) for details.
