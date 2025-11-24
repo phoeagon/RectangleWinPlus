@@ -14,7 +14,7 @@
 // limitations under the License.
 
 // TODO make it possible to "go generate" on Windows (https://github.com/josephspurrier/goversioninfo/issues/52).
-//go:generate /bin/bash -c "go run github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest -arm -64 -icon=assets/icon.ico - <<< '{}'"
+//go:generate go run github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest -icon=assets/icon.ico -manifest=app.manifest
 
 package main
 
@@ -38,7 +38,15 @@ var lastActiveWindow w32.HWND
 var hks []HotKey
 var shouldRestart bool
 
-const currentVersion = "v1.0.3"
+// Command-line flags
+var debug *bool
+var killAll *bool
+var help *bool
+var action *string
+var loadTray *bool
+var settingsWindow *bool
+
+const currentVersion = "v1.0.2"
 
 type Feature struct {
 	Name        string
@@ -49,7 +57,38 @@ type Feature struct {
 
 var features []Feature
 
+type FeatureDefinition struct {
+	DisplayName string
+	Callback    func()
+}
+
+var featureDefinitions map[string]FeatureDefinition
+
+// Static map of feature display names for settings UI
+var featureDisplayNames = map[string]string{
+	"moveToTop":         "Top half",
+	"moveToBottom":      "Bottom half",
+	"moveToLeft":        "Left half",
+	"moveToRight":       "Right half",
+	"moveToTopLeft":     "Top-Left corner",
+	"moveToTopRight":    "Top-Right corner",
+	"moveToBottomLeft":  "Bottom-Left corner",
+	"moveToBottomRight": "Bottom-Right corner",
+	"maximize":          "Maximize",
+	"almostMaximize":    "Almost Maximize",
+	"makeFullHeight":    "Maximize Height",
+	"makeLarger":        "Larger",
+	"makeSmaller":       "Smaller",
+	"moveToCenter":      "Center",
+	"nextDisplay":       "Next Display",
+	"prevDisplay":       "Previous Display",
+	"toggleAlwaysOnTop": "Toggle Always On Top",
+}
+
 func main() {
+	// Initialize flags with ContinueOnError to handle parsing errors
+	flag.CommandLine.Init(os.Args[0], flag.ContinueOnError)
+
 	// Set custom usage message
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "RectangleWin Plus - Window management utility for Windows\n\n")
@@ -59,14 +98,22 @@ func main() {
 		fmt.Fprintf(os.Stderr, "\nFor more information, visit: https://github.com/phoeagon/RectangleWinPlus\n")
 	}
 
-	debug := flag.Bool("debug", false, "enable debug mode (show console output)")
-	killAll := flag.Bool("killall", false, "kill all RectangleWinPlus instances and quit")
-	help := flag.Bool("help", false, "show this help message")
-	action := flag.String("action", "", "action to perform (moveToTop, moveToBottom, moveToLeft, moveToRight, moveToTopLeft, moveToTopRight, moveToBottomLeft, moveToBottomRight, maximize, almostMaximize, makeFullHeight, makeLarger, makeSmaller)")
-	loadTray := flag.Bool("load_tray", true, "load tray icon")
+	debug = flag.Bool("debug", false, "enable debug mode (show console output)")
+	killAll = flag.Bool("killall", false, "kill all RectangleWinPlus instances and quit")
+	help = flag.Bool("help", false, "show this help message")
+	action = flag.String("action", "", "action to perform (moveToTop, moveToBottom, moveToLeft, moveToRight, moveToTopLeft, moveToTopRight, moveToBottomLeft, moveToBottomRight, maximize, almostMaximize, makeFullHeight, makeLarger, makeSmaller)")
+	loadTray = flag.Bool("load_tray", true, "load tray icon")
 	version := flag.Bool("version", false, "show version information")
 	helpfull := flag.Bool("helpfull", false, "show detailed help message")
-	flag.Parse()
+	settingsWindow = flag.Bool("settings-window", false, "open settings window (internal use)")
+
+	if err := flag.CommandLine.Parse(os.Args[1:]); err != nil {
+		if err != flag.ErrHelp {
+			fmt.Printf("Error parsing flags: %v\n", err)
+			os.Exit(1)
+		}
+		return
+	}
 
 	if *debug {
 		// FixConsole ensures that we can see stdout/stderr in the console
@@ -90,6 +137,14 @@ func main() {
 		if !*debug {
 			showMessageBox(fmt.Sprintf("RectangleWin Plus \n - Version: %s", currentVersion))
 		}
+		return
+	}
+
+	// Handle settings window flag
+	if *settingsWindow {
+		runtime.LockOSThread() // since we bind hotkeys etc that need to dispatch their message here
+
+		runSettingsWindow()
 		return
 	}
 
