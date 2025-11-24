@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/gonutz/w32/v2"
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
 	"gopkg.in/yaml.v3"
@@ -246,6 +247,13 @@ func startRecordingHotkey(sw *SettingsWindowApp, row *HotkeyRow) {
 						modifiers = append(modifiers, "Shift")
 						modCodes = append(modCodes, MOD_SHIFT)
 					}
+					// Check for Windows key (walk.ModifiersDown doesn't include it)
+					// VK_LWIN = 0x5B, VK_RWIN = 0x5C
+					// GetAsyncKeyState returns a short where the high-order bit indicates if key is down
+					if (w32.GetAsyncKeyState(w32.VK_LWIN)&0x8000 != 0) || (w32.GetAsyncKeyState(w32.VK_RWIN)&0x8000 != 0) {
+						modifiers = append(modifiers, "Win")
+						modCodes = append(modCodes, MOD_WIN)
+					}
 
 					// Map key
 					keyName := mapWalkKeyToName(key)
@@ -403,5 +411,5 @@ func mapWalkKeyToName(key walk.Key) string {
 	if len(s) == 1 {
 		return s
 	}
-	return strings.ToUpper(s)
+	return strings.ReplaceAll(keyNames[int(key)], " key", "")
 }
