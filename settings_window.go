@@ -340,7 +340,7 @@ func startRecordingHotkey(sw *SettingsWindowApp, row *HotkeyRow) {
 }
 
 func isModifierKey(key walk.Key) bool {
-	return key == walk.KeyControl || key == walk.KeyAlt || key == walk.KeyShift
+	return key == walk.KeyControl || key == walk.KeyAlt || key == walk.KeyShift || key == walk.Key(w32.VK_LWIN) || key == walk.Key(w32.VK_RWIN)
 }
 
 // findHotkeyConflict checks if the given hotkey conflicts with any other row's hotkey
