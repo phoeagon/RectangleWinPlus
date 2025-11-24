@@ -46,7 +46,7 @@ var action *string
 var loadTray *bool
 var settingsWindow *bool
 
-const currentVersion = "v1.0.2"
+const currentVersion = "v1.0.4"
 
 type Feature struct {
 	Name        string

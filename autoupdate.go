@@ -66,7 +66,7 @@ func checkForUpdates() {
 		// Find asset
 		var downloadUrl string
 		for _, asset := range release.Assets {
-			if strings.HasSuffix(asset.Name, ".exe") {
+			if strings.HasSuffix(asset.Name, ".exe") && !strings.Contains(asset.Name, "-installer.") {
 				downloadUrl = asset.BrowserDownloadUrl
 				break
 			}
