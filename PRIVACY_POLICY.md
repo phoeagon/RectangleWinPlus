@@ -3,7 +3,7 @@ Privacy Policy
 
 Last Updated: Nov 23, 2025
 
-Overview
+## Overview
 
 This application (“the App”) is developed and provided by phoeagon software. We take privacy seriously.
 This Privacy Policy explains how the App handles data and describes your rights related to its use.
