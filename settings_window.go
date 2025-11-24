@@ -548,36 +548,6 @@ func openConfigInEditor(sw *SettingsWindowApp) {
 	walk.MsgBox(sw, "Info", "Config file opened in Notepad.\n\nAfter making changes, save the file and restart RectangleWin Plus to apply them.", walk.MsgBoxIconInformation)
 }
 
-// convertToRawURL converts various URL formats to their raw content equivalents
-func convertToRawURL(url string) string {
-	// GitHub file URLs: github.com/user/repo/blob/branch/file -> raw.githubusercontent.com/user/repo/branch/file
-	if strings.Contains(url, "github.com") && strings.Contains(url, "/blob/") {
-		url = strings.Replace(url, "github.com", "raw.githubusercontent.com", 1)
-		url = strings.Replace(url, "/blob/", "/", 1)
-		return url
-	}
-
-	// GitHub Gist URLs: gist.github.com/user/gist_id -> gist.githubusercontent.com/user/gist_id/raw
-	if strings.Contains(url, "gist.github.com") && !strings.Contains(url, "raw") {
-		url = strings.Replace(url, "gist.github.com", "gist.githubusercontent.com", 1)
-		// Remove trailing slash if present
-		url = strings.TrimSuffix(url, "/")
-		// Add /raw to get the raw content
-		url = url + "/raw"
-		return url
-	}
-
-	// Bitbucket URLs: bitbucket.org/user/repo/src/branch/file -> bitbucket.org/user/repo/raw/branch/file
-	if strings.Contains(url, "bitbucket.org") && strings.Contains(url, "/src/") {
-		url = strings.Replace(url, "/src/", "/raw/", 1)
-		return url
-	}
-
-	// Already raw or other URLs - return as-is
-	return url
-}
-
-// importConfigFromURL allows the user to import configuration from a web URL
 // importConfigFromURL allows the user to import configuration from a web URL
 func importConfigFromURL(sw *SettingsWindowApp) {
 	var dlg *walk.Dialog
